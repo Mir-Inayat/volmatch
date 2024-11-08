@@ -97,3 +97,36 @@ class Application(models.Model):
         default='pending'
     )
     hours_completed = models.IntegerField(default=0)
+
+class CommunityPost(models.Model):
+    author = models.ForeignKey(Volunteer, on_delete=models.CASCADE, related_name='posts')
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    category = models.CharField(max_length=50)
+    created_at = models.DateTimeField(auto_now_add=True)
+    likes = models.IntegerField(default=0)
+    comments = models.IntegerField(default=0)
+    tags = models.JSONField(default=list)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title
+
+class PostLike(models.Model):
+    post = models.ForeignKey(CommunityPost, on_delete=models.CASCADE, related_name='post_likes')
+    volunteer = models.ForeignKey(Volunteer, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['post', 'volunteer']
+
+class PostComment(models.Model):
+    post = models.ForeignKey(CommunityPost, on_delete=models.CASCADE, related_name='post_comments')
+    author = models.ForeignKey(Volunteer, on_delete=models.CASCADE)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']

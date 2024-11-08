@@ -1,5 +1,6 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Calendar, Clock, Award } from 'lucide-react'
+import { getLeaderboard, type Volunteer } from '../api'
 
 const VolunteerDashboard: React.FC = () => {
   // Dummy data for demonstration
@@ -13,6 +14,21 @@ const VolunteerDashboard: React.FC = () => {
     { id: 1, title: 'Beach Clean-up', date: '2023-05-30', hours: 4 },
     { id: 2, title: 'Animal Shelter Helper', date: '2023-06-05', hours: 3 },
   ]
+
+  const [leaderboard, setLeaderboard] = useState<Volunteer[]>([]);
+
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      try {
+        const data = await getLeaderboard();
+        setLeaderboard(data);
+      } catch (error) {
+        console.error('Error fetching leaderboard:', error);
+      }
+    };
+
+    fetchLeaderboard();
+  }, []);
 
   return (
     <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
@@ -80,18 +96,18 @@ const VolunteerDashboard: React.FC = () => {
           <div className="px-4 py-5 sm:p-6">
             <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Top Volunteers Leaderboard</h2>
             <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-              {[...Array(5)].map((_, index) => (
-                <li key={index} className="py-4">
+              {leaderboard.map((entry) => (
+                <li key={entry.id} className="py-4">
                   <div className="flex items-center space-x-4">
                     <div className="flex-shrink-0">
                       <Award className="h-6 w-6 text-yellow-500" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">Volunteer {index + 1}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 truncate">Total Hours: {100 - index * 10}</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{entry.name}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 truncate">Total Hours: {entry.hours}</p>
                     </div>
                     <div className="inline-flex items-center text-sm font-semibold text-yellow-600 dark:text-yellow-400">
-                      Rank #{index + 1}
+                      Rank #{entry.rank || '-'}
                     </div>
                   </div>
                 </li>

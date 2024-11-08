@@ -89,6 +89,56 @@ export type Volunteer = {
   // Add any other fields that your leaderboard returns
 };
 
+// Add these types after the existing types
+export interface CommunityPost {
+  id: number;
+  author: {
+    id: number;
+    name: string;
+    avatar?: string;
+  };
+  title: string;
+  content: string;
+  category: string;
+  likes: number;
+  comments: number;
+  created_at: string;
+  tags: string[];
+}
+
+// Add this type definition near your other types
+export interface Comment {
+  id: number;
+  author: {
+    id: number;
+    name: string;
+    avatar?: string;
+  };
+  content: string;
+  created_at: string;
+}
+
+// Add these API functions before the final export
+export const getCommunityPosts = async (): Promise<CommunityPost[]> => {
+  try {
+    const response = await axiosInstance.get('/api/community/posts/');
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching community posts", error);
+    throw error;
+  }
+};
+
+export const createCommunityPost = async (postData: Partial<CommunityPost>): Promise<CommunityPost> => {
+  try {
+    const response = await axiosInstance.post('/api/community/posts/', postData);
+    return response.data;
+  } catch (error) {
+    console.error("Error creating community post", error);
+    throw error;
+  }
+};
+
 // API functions
 export const register = async (data: RegisterData) => {
   try {
@@ -172,6 +222,36 @@ export const getLeaderboard = async (): Promise<Volunteer[]> => {
     return response.data;
   } catch (error) {
     console.error("Error fetching leaderboard", error);
+    throw error;
+  }
+};
+
+export const likePost = async (postId: number): Promise<{ liked: boolean; likes_count: number }> => {
+  try {
+    const response = await axiosInstance.post(`/api/community/posts/${postId}/like/`);
+    return response.data;
+  } catch (error) {
+    console.error("Error liking post", error);
+    throw error;
+  }
+};
+
+export const getPostComments = async (postId: number): Promise<Comment[]> => {
+  try {
+    const response = await axiosInstance.get(`/api/community/posts/${postId}/comments/`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching comments", error);
+    throw error;
+  }
+};
+
+export const createComment = async (postId: number, content: string): Promise<Comment> => {
+  try {
+    const response = await axiosInstance.post(`/api/community/posts/${postId}/comments/`, { content });
+    return response.data;
+  } catch (error) {
+    console.error("Error creating comment", error);
     throw error;
   }
 };

@@ -33,6 +33,7 @@ const Navbar: React.FC = () => {
           <>
             <Link to="/volunteer-dashboard" className={baseClasses}>Volunteer Dashboard</Link>
             <Link to="/leaderboard" className={baseClasses}>Leaderboard</Link>
+            <Link to="/community" className={baseClasses}>Community</Link>
             <Link to="/profile" className={baseClasses}>Profile</Link>
           </>
         )}

@@ -25,6 +25,10 @@ from django.shortcuts import get_object_or_404
 from .models import Volunteer, VolunteerActivity, Organization, VolunteerOpportunity
 from django.db.models import Avg
 from .models import VolunteerPerformance
+from .models import CommunityPost
+from .serializers import CommunityPostSerializer
+from .models import PostLike, PostComment
+from .serializers import PostCommentSerializer
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginView(View):
@@ -284,3 +288,96 @@ class LeaderboardView(APIView):
         leaderboard_data.sort(key=lambda x: x['hours'], reverse=True)
         
         return Response(leaderboard_data)
+
+class CommunityPostView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        posts = CommunityPost.objects.all()
+        serializer = CommunityPostSerializer(posts, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        try:
+            volunteer = get_object_or_404(Volunteer, user=request.user)
+            
+            # Add the volunteer as the author
+            data = request.data.copy()
+            
+            post = CommunityPost.objects.create(
+                author=volunteer,
+                title=data.get('title'),
+                content=data.get('content'),
+                category=data.get('category'),
+                tags=data.get('tags', [])
+            )
+            
+            serializer = CommunityPostSerializer(post)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+class PostLikeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, post_id):
+        try:
+            post = get_object_or_404(CommunityPost, id=post_id)
+            volunteer = get_object_or_404(Volunteer, user=request.user)
+            
+            like, created = PostLike.objects.get_or_create(
+                post=post,
+                volunteer=volunteer
+            )
+            
+            if not created:
+                # Unlike if already liked
+                like.delete()
+                post.likes = post.post_likes.count()
+                post.save()
+                return Response({'liked': False, 'likes_count': post.likes})
+            
+            post.likes = post.post_likes.count()
+            post.save()
+            return Response({'liked': True, 'likes_count': post.likes})
+            
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+class PostCommentView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, post_id):
+        post = get_object_or_404(CommunityPost, id=post_id)
+        comments = post.post_comments.all()
+        serializer = PostCommentSerializer(comments, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, post_id):
+        try:
+            post = get_object_or_404(CommunityPost, id=post_id)
+            volunteer = get_object_or_404(Volunteer, user=request.user)
+            
+            comment = PostComment.objects.create(
+                post=post,
+                author=volunteer,
+                content=request.data.get('content')
+            )
+            
+            post.comments = post.post_comments.count()
+            post.save()
+            
+            serializer = PostCommentSerializer(comment)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )

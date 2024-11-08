@@ -14,6 +14,7 @@ import OrganizationDashboard from './pages/OrganizationDashboard';
 import LeaderboardPage from './pages/LeaderboardPage';
 import ProfilePage from './pages/ProfilePage';
 import RewardsPage from './pages/RewardsPage';
+import CommunityPage from './pages/CommunityPage';
 
 const App: React.FC = () => {
   return (
@@ -38,6 +39,7 @@ const App: React.FC = () => {
               <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/rewards" element={<RewardsPage />} />
+              <Route path="/community" element={<CommunityPage />} />
             </Routes>
           </main>
         </div>

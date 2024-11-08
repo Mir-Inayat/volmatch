@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Volunteer, Opportunity, Application
+from .models import Volunteer, Opportunity, Application, CommunityPost, PostLike, PostComment
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -54,3 +54,40 @@ class VolunteerProfileSerializer(serializers.ModelSerializer):
             'date': activity.opportunity.date,
             'hours': activity.hours_completed
         } for activity in activities]
+
+class PostCommentSerializer(serializers.ModelSerializer):
+    author = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PostComment
+        fields = ['id', 'author', 'content', 'created_at']
+
+    def get_author(self, obj):
+        return {
+            'id': obj.author.id,
+            'name': f"{obj.author.user.first_name} {obj.author.user.last_name}",
+            'avatar': None
+        }
+
+class CommunityPostSerializer(serializers.ModelSerializer):
+    author = serializers.SerializerMethodField()
+    is_liked = serializers.SerializerMethodField()
+    comments = PostCommentSerializer(source='post_comments', many=True, read_only=True)
+
+    class Meta:
+        model = CommunityPost
+        fields = ['id', 'author', 'title', 'content', 'category', 'likes', 'comments', 'created_at', 'tags', 'is_liked']
+
+    def get_author(self, obj):
+        return {
+            'id': obj.author.id,
+            'name': f"{obj.author.user.first_name} {obj.author.user.last_name}",
+            'avatar': None
+        }
+
+    def get_is_liked(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            volunteer = Volunteer.objects.get(user=request.user)
+            return obj.post_likes.filter(volunteer=volunteer).exists()
+        return False

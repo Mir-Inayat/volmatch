@@ -15,4 +15,7 @@ urlpatterns = [
     path('profile/activity/', views.VolunteerActivityView.as_view(), name='volunteer-activity'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('leaderboard/', views.LeaderboardView.as_view(), name='leaderboard'),
+    path('community/posts/', views.CommunityPostView.as_view(), name='community-posts'),
+    path('community/posts/<int:post_id>/like/', views.PostLikeView.as_view(), name='post-like'),
+    path('community/posts/<int:post_id>/comments/', views.PostCommentView.as_view(), name='post-comments'),
 ]

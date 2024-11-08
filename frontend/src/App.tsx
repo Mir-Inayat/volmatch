@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Navbar from './components/Navbar';
@@ -14,23 +14,14 @@ import OrganizationDashboard from './pages/OrganizationDashboard';
 import LeaderboardPage from './pages/LeaderboardPage';
 import ProfilePage from './pages/ProfilePage';
 import RewardsPage from './pages/RewardsPage';
-import { getData } from './api'; // Import your API function
 
 const App: React.FC = () => {
-  const [data, setData] = useState(null);
-
-  useEffect(() => {
-    getData()
-      .then((data) => setData(data))
-      .catch((error) => console.error('Error fetching data:', error));
-  }, []);
-
   return (
     <ThemeProvider>
       <Router>
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
           <Navbar />
-          <header className="flex justify-between p-4 bg-blue-500 text-white">
+          <header className="flex justify-bestween p-4 bg-blue-500 text-white">
             {/* Custom login and logout buttons or any other auth component */}
           </header>
           <main>
@@ -49,15 +40,6 @@ const App: React.FC = () => {
               <Route path="/rewards" element={<RewardsPage />} />
             </Routes>
           </main>
-          {/* Example section to display API data */}
-          <section className="p-4">
-            <h2>Data from API</h2>
-            {data ? (
-              <pre>{JSON.stringify(data, null, 2)}</pre>
-            ) : (
-              <p>Loading data...</p>
-            )}
-          </section>
         </div>
       </Router>
     </ThemeProvider>

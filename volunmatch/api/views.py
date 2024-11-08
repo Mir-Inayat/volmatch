@@ -23,6 +23,8 @@ import json
 from rest_framework.decorators import api_view, permission_classes
 from django.shortcuts import get_object_or_404
 from .models import Volunteer, VolunteerActivity, Organization, VolunteerOpportunity
+from django.db.models import Avg
+from .models import VolunteerPerformance
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginView(View):
@@ -259,3 +261,26 @@ class VolunteerProfileView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return get_object_or_404(Volunteer, user=self.request.user)
+
+class LeaderboardView(APIView):
+    def get(self, request):
+        volunteers = Volunteer.objects.all()
+        
+        # Calculate average rating for each volunteer from their performances
+        leaderboard_data = []
+        for volunteer in volunteers:
+            performances = VolunteerPerformance.objects.filter(volunteer=volunteer)
+            avg_rating = performances.aggregate(Avg('rating'))['rating__avg'] or 0.0
+            
+            leaderboard_data.append({
+                'id': volunteer.id,
+                'name': f"{volunteer.user.first_name} {volunteer.user.last_name}",
+                'hours': volunteer.total_hours,
+                'tasks': volunteer.tasks_completed,
+                'rating': avg_rating
+            })
+        
+        # Sort by hours completed
+        leaderboard_data.sort(key=lambda x: x['hours'], reverse=True)
+        
+        return Response(leaderboard_data)

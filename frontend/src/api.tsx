@@ -1,31 +1,37 @@
 import axios from 'axios';
 
 const BASE_URL = 'http://localhost:8000';
-
-// Create axios instance with default config
-const api = axios.create({
-  baseURL: BASE_URL,
+// Update the axios instance configuration
+const axiosInstance = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || `${BASE_URL}/api`,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Add interceptor to add auth token to requests
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+// Modify the request interceptor to skip auth for public routes
+axiosInstance.interceptors.request.use((config) => {
+  // List of public routes that don't need authentication
+  const publicRoutes = ['/leaderboard'];
+  
+  // Only add auth header if the route is not public
+  if (!publicRoutes.some(route => config.url?.includes(route))) {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   }
+  
   return config;
 });
 
 // Add error handling interceptor
-api.interceptors.response.use(
+axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       // Clear invalid token
-      localStorage.removeItem('authToken');
+      localStorage.removeItem('token');
     }
     return Promise.reject(error);
   }
@@ -71,10 +77,24 @@ export interface LoginData {
   password: string;
 }
 
+// Add the Volunteer type if not already defined
+export type Volunteer = {
+  id: number;
+  name: string;
+  hours: number;
+  rank?: number;
+  tasks: number;
+  rating: number;
+  // Add any other fields that your leaderboard returns
+};
+
 // API functions
 export const register = async (data: RegisterData) => {
   try {
-    const response = await api.post('/api/register/', data);
+    const response = await axiosInstance.post('/api/register/', data);
+    localStorage.setItem('authToken', response.data.token);
+    localStorage.setItem('refreshToken', response.data.refresh);
+    localStorage.setItem('userType', 'volunteer');
     return response.data;
   } catch (error) {
     console.error("Error registering", error);
@@ -89,7 +109,7 @@ export const fetchProfile = async (): Promise<Profile> => {
       throw new Error('No authentication token found');
     }
 
-    const response = await api.get('/api/profile/');
+    const response = await axiosInstance.get('/api/profile/');
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -104,7 +124,7 @@ export const fetchProfile = async (): Promise<Profile> => {
 
 export const updateProfile = async (profileData: Partial<Profile>) => {
   try {
-    const response = await api.patch('/api/profile/', profileData);
+    const response = await axiosInstance.patch('/api/profile/', profileData);
     return response.data;
   } catch (error) {
     console.error("Error updating profile", error);
@@ -114,10 +134,13 @@ export const updateProfile = async (profileData: Partial<Profile>) => {
 
 export const login = async (email: string, password: string) => {
   try {
-    const response = await api.post('/api/login/', { 
-      username: email,  // Keep username in the request for Django compatibility
+    const response = await axiosInstance.post('/api/login/', { 
+      username: email,
       password 
     });
+    localStorage.setItem('authToken', response.data.access);
+    localStorage.setItem('refreshToken', response.data.refresh);
+    localStorage.setItem('userType', 'volunteer');
     return response.data;
   } catch (error) {
     console.error("Error logging in", error);
@@ -129,7 +152,7 @@ export const logout = async () => {
   try {
     const refreshToken = localStorage.getItem('refreshToken');
     if (refreshToken) {
-      await api.post('/api/logout/', { refresh: refreshToken });
+      await axiosInstance.post('/api/logout/', { refresh: refreshToken });
     }
     // Clear tokens regardless of API call success
     localStorage.removeItem('authToken');
@@ -141,3 +164,16 @@ export const logout = async () => {
     localStorage.removeItem('refreshToken');
   }
 };
+
+export const getLeaderboard = async (): Promise<Volunteer[]> => {
+  try {
+    const response = await axiosInstance.get('/leaderboard/');
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching leaderboard", error);
+    throw error;
+  }
+};
+
+// Add this line to export the instance
+export const api = axiosInstance;

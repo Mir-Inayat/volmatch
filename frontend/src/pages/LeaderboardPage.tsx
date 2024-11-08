@@ -1,13 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Trophy, Clock, Star } from 'lucide-react'
-
-interface Volunteer {
-  id: number;
-  name: string;
-  hours: number;
-  tasks: number;
-  rating: number;
-}
+import { getLeaderboard, Volunteer } from '../api';
 
 const LeaderboardPage: React.FC = () => {
   const [leaderboardData, setLeaderboardData] = useState<Volunteer[]>([]);
@@ -15,8 +8,7 @@ const LeaderboardPage: React.FC = () => {
   useEffect(() => {
     const fetchLeaderboardData = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/leaderboard');
-        const data = await response.json();
+        const data = await getLeaderboard();
         setLeaderboardData(data);
       } catch (error) {
         console.error('Error fetching leaderboard data:', error);

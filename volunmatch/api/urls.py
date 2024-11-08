@@ -14,4 +14,5 @@ urlpatterns = [
     path('profile/', views.VolunteerProfileView.as_view(), name='profile'),
     path('profile/activity/', views.VolunteerActivityView.as_view(), name='volunteer-activity'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('leaderboard/', views.LeaderboardView.as_view(), name='leaderboard'),
 ]

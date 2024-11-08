@@ -9,6 +9,7 @@ const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false)
   const navigate = useNavigate()
   const isAuthenticated = !!localStorage.getItem('authToken')
+  const userType = localStorage.getItem('userType')
 
   const handleLogout = async () => {
     try {
@@ -17,6 +18,33 @@ const Navbar: React.FC = () => {
     } catch (error) {
       console.error('Logout failed:', error);
     }
+  };
+
+  const renderNavLinks = (isMobile: boolean = false) => {
+    const baseClasses = isMobile 
+      ? "block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+      : "px-3 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white";
+
+    return (
+      <>
+        <Link to="/" className={baseClasses}>Home</Link>
+        
+        {isAuthenticated && userType === 'volunteer' && (
+          <>
+            <Link to="/volunteer-dashboard" className={baseClasses}>Volunteer Dashboard</Link>
+            <Link to="/leaderboard" className={baseClasses}>Leaderboard</Link>
+            <Link to="/profile" className={baseClasses}>Profile</Link>
+          </>
+        )}
+
+        {isAuthenticated && userType === 'organization' && (
+          <>
+            <Link to="/organization-dashboard" className={baseClasses}>Organization Dashboard</Link>
+            <Link to="/profile" className={baseClasses}>Profile</Link>
+          </>
+        )}
+      </>
+    );
   };
 
   return (
@@ -29,15 +57,11 @@ const Navbar: React.FC = () => {
             </Link>
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-4">
-                <Link to="/" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Home</Link>
-                <Link to="/volunteer-dashboard" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Volunteer Dashboard</Link>
-                <Link to="/organization-dashboard" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Organization Dashboard</Link>
-                <Link to="/leaderboard" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Leaderboard</Link>
-                <Link to="/profile" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Profile</Link>
-                <Link to="/rewards" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Rewards</Link>
+                {renderNavLinks()}
               </div>
             </div>
           </div>
+          
           <div className="hidden md:flex items-center space-x-4">
             <button
               onClick={toggleTheme}
@@ -63,6 +87,7 @@ const Navbar: React.FC = () => {
               </Link>
             )}
           </div>
+
           <div className="-mr-2 flex md:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -77,13 +102,8 @@ const Navbar: React.FC = () => {
       {isMenuOpen && (
         <div className="md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <Link to="/" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Home</Link>
-            <Link to="/volunteer-dashboard" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Volunteer Dashboard</Link>
-            <Link to="/organization-dashboard" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Organization Dashboard</Link>
-            <Link to="/leaderboard" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Leaderboard</Link>
-            <Link to="/profile" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Profile</Link>
-            <Link to="/rewards" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Rewards</Link>
-
+            {renderNavLinks(true)}
+            
             {isAuthenticated ? (
               <button
                 onClick={handleLogout}

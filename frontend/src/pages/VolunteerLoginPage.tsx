@@ -1,12 +1,39 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { login } from '../api';
+import { ArrowLeft } from 'lucide-react';
 
 const VolunteerLoginPage: React.FC = () => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+
   const handleGoogleLogin = () => {
-    // Google login logic would go here
-    console.log('Google login clicked')
-  }
+    console.log('Google login clicked');
+    // Implement Google login here if applicable
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    try {
+      const response = await login(username, password);
+      const accessToken = response.access;
+      const refreshToken = response.refresh;
+
+      // Save the tokens in localStorage or a cookie
+      localStorage.setItem('authToken', accessToken);
+      localStorage.setItem('refreshToken', refreshToken);
+
+      // Redirect to profile page
+      navigate('/profile');
+    } catch (err) {
+      console.error('Login failed:', err);
+      setError('Invalid username or password.');
+    }
+  };
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-gray-100 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
@@ -20,40 +47,23 @@ const VolunteerLoginPage: React.FC = () => {
             Volunteer Login
           </h2>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            Welcome back! Please enter your details
+            Welcome back! Please enter your username and password
           </p>
         </div>
 
-        <div className="mt-8">
-          <button
-            onClick={handleGoogleLogin}
-            className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
-          >
-            <img src="https://www.google.com/favicon.ico" alt="Google" className="h-5 w-5 mr-2" />
-            Continue with Google
-          </button>
-
-          <div className="mt-6 relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gray-100 dark:bg-gray-900 text-gray-500">Or continue with</span>
-            </div>
-          </div>
-        </div>
-
-        <form className="mt-8 space-y-6" onSubmit={(e) => e.preventDefault()}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {error && <p className="text-red-500 text-sm">{error}</p>}
           <div className="rounded-md shadow-sm space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Email address
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Username
               </label>
               <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
+                id="username"
+                name="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm dark:bg-gray-700"
               />
@@ -67,30 +77,11 @@ const VolunteerLoginPage: React.FC = () => {
                 id="password"
                 name="password"
                 type="password"
-                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm dark:bg-gray-700"
               />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
-                Remember me
-              </label>
-            </div>
-
-            <div className="text-sm">
-              <Link to="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
-                Forgot your password?
-              </Link>
             </div>
           </div>
 
@@ -114,7 +105,7 @@ const VolunteerLoginPage: React.FC = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default VolunteerLoginPage
+export default VolunteerLoginPage;

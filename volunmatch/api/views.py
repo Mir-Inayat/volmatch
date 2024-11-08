@@ -13,6 +13,35 @@ from rest_framework.views import APIView
 from .recommendations import VolunteerRecommendationSystem
 from django.contrib.auth import authenticate
 
+# In api/views.py
+from django.contrib.auth import authenticate, login
+from django.http import JsonResponse
+from django.views import View
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+import json
+
+@method_decorator(csrf_exempt, name='dispatch')
+class LoginView(View):
+    def post(self, request, *args, **kwargs):
+        data = json.loads(request.body)
+        username = data.get('username')
+        password = data.get('password')
+
+        user = authenticate(request, username=username, password=password)
+        
+        if user is not None:
+            login(request, user)
+            # Create a token for the user
+            refresh = RefreshToken.for_user(user)
+            return JsonResponse({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'message': 'Login successful'
+            })
+        else:
+            return JsonResponse({'error': 'Invalid credentials'}, status=400)
+        
 class RecommendOpportunitiesForVolunteer(APIView):
     def get(self, request, volunteer_id):
         rec_sys = VolunteerRecommendationSystem()
@@ -61,24 +90,3 @@ class OpportunityListCreate(generics.ListCreateAPIView):
 class ApplicationListCreate(generics.ListCreateAPIView):
     queryset = Application.objects.all()
     serializer_class = ApplicationSerializer
-
-class CustomLoginView(APIView):
-    def post(self, request):
-        username = request.data.get('username')
-        password = request.data.get('password')
-
-        if not username or not password:
-            return Response({"error": "Please provide both username and password."}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Authenticate the user
-        user = authenticate(username=username, password=password)
-
-        if user is not None:
-            # Generate tokens
-            refresh = RefreshToken.for_user(user)
-            return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-            })
-        else:
-            return Response({"error": "Invalid credentials."}, status=status.HTTP_401_UNAUTHORIZED)

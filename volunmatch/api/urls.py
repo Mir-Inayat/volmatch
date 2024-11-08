@@ -7,7 +7,7 @@ from .views import (
     LogoutView,
     RecommendOpportunitiesForVolunteer,
     RecommendVolunteersForOpportunity,
-    CustomLoginView
+    LoginView
 )
 
 urlpatterns = [
@@ -18,5 +18,5 @@ urlpatterns = [
     path('logout/', LogoutView.as_view(), name='logout'),
     path('recommendations/opportunities/<int:volunteer_id>/', RecommendOpportunitiesForVolunteer.as_view(), name='recommend_opportunities'),
     path('recommendations/volunteers/<int:opportunity_id>/', RecommendVolunteersForOpportunity.as_view(), name='recommend_volunteers'),
-    path('login/', CustomLoginView.as_view(), name='login'),
+    path('login/', LoginView.as_view(), name='login'),
 ]

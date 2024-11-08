@@ -32,7 +32,7 @@ api.interceptors.response.use(
 );
 
 // Types
-export interface Profile {
+export type Profile = {
   user: {
     first_name: string;
     last_name: string;
@@ -41,36 +41,44 @@ export interface Profile {
   location: string;
   join_date: string;
   total_hours: number;
-  tasks_completed: number;
   skills: string[];
   badges: string[];
-  activities: Activity[];
+  activities: {
+    id: number;
+    title: string;
+    date: string;
+    hours: number;
+  }[];
+};
+
+export interface RegisterData {
+  username: string;
+  password: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  location: string;
+  skills: string[];
 }
 
-export interface Activity {
-  id: number;
-  title: string;
-  date: string;
-  hours: number;
+export interface LoginData {
+  username: string;
+  password: string;
 }
 
 // API functions
-export const login = async (username: string, password: string) => {
+export const register = async (data: RegisterData) => {
   try {
-    const response = await api.post('/api/login/', { username, password });
-    if (response.data.token) {
-      localStorage.setItem('authToken', response.data.token);
-    }
+    const response = await api.post('/api/register/', data);
     return response.data;
   } catch (error) {
-    console.error("Error logging in", error);
+    console.error("Error registering", error);
     throw error;
   }
 };
 
 export const fetchProfile = async (): Promise<Profile> => {
   try {
-    // Check if user is authenticated
     const token = localStorage.getItem('authToken');
     if (!token) {
       throw new Error('No authentication token found');
@@ -80,10 +88,7 @@ export const fetchProfile = async (): Promise<Profile> => {
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      if (error.response?.status === 400) {
-        console.error('Bad request:', error.response.data);
-        throw new Error('Invalid request to fetch profile');
-      } else if (error.response?.status === 401) {
+      if (error.response?.status === 401) {
         throw new Error('Please log in to view your profile');
       }
     }
@@ -94,7 +99,7 @@ export const fetchProfile = async (): Promise<Profile> => {
 
 export const updateProfile = async (profileData: Partial<Profile>) => {
   try {
-    const response = await api.put('/api/profile/', profileData);
+    const response = await api.patch('/api/profile/', profileData);
     return response.data;
   } catch (error) {
     console.error("Error updating profile", error);
@@ -102,12 +107,15 @@ export const updateProfile = async (profileData: Partial<Profile>) => {
   }
 };
 
-export const addActivity = async (activity: Omit<Activity, 'id'>) => {
+export const login = async (data: LoginData) => {
   try {
-    const response = await api.post('/api/profile/activity/', activity);
+    const response = await api.post('/api/login/', data);
+    if (response.data.token) {
+      localStorage.setItem('authToken', response.data.token);
+    }
     return response.data;
   } catch (error) {
-    console.error("Error adding activity", error);
+    console.error("Error logging in", error);
     throw error;
   }
 };

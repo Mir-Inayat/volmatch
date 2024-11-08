@@ -2,7 +2,7 @@ from django.shortcuts import render
 
 # Create your views here.
 from .models import Volunteer, Opportunity, Application
-from .serializers import VolunteerSerializer, OpportunitySerializer, ApplicationSerializer, RegisterSerializer
+from .serializers import VolunteerSerializer, OpportunitySerializer, ApplicationSerializer, RegisterSerializer, VolunteerProfileSerializer
 from rest_framework import generics, permissions
 from rest_framework.response import Response
 from django.contrib.auth.models import User
@@ -198,3 +198,14 @@ class VolunteerActivityView(APIView):
                 {'error': 'Failed to add activity'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+class RegisterVolunteerView(generics.CreateAPIView):
+    serializer_class = VolunteerProfileSerializer
+    permission_classes = [permissions.AllowAny]
+
+class VolunteerProfileView(generics.RetrieveUpdateAPIView):
+    serializer_class = VolunteerProfileSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return get_object_or_404(Volunteer, user=self.request.user)

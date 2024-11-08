@@ -1,9 +1,65 @@
-import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowLeft, Upload, Mail } from 'lucide-react'
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Upload } from 'lucide-react';
+import { register } from '../api';
 
 const VolunteerSignupPage: React.FC = () => {
-  const [profileImage, setProfileImage] = useState<string | null>(null)
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    username: '',
+    password: '',
+    email: '',
+    first_name: '',
+    last_name: '',
+    location: '',
+    skills: [] as string[],
+  });
+  const [error, setError] = useState<string | null>(null);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+
+  const handleSkillsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const skills = e.target.value.split(',').map(skill => skill.trim());
+    setFormData(prev => ({
+      ...prev,
+      skills
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    try {
+      // Split full name into first and last name
+      const nameParts = formData.first_name.split(' ');
+      const firstName = nameParts[0];
+      const lastName = nameParts.slice(1).join(' ');
+
+      const registrationData = {
+        username: formData.email, // Using email as username
+        password: formData.password,
+        email: formData.email,
+        first_name: firstName,
+        last_name: lastName,
+        location: formData.location,
+        skills: formData.skills,
+      };
+
+      await register(registrationData);
+      navigate('/login'); // Redirect to login page after successful registration
+    } catch (err) {
+      setError('Registration failed. Please try again.');
+      console.error('Registration error:', err);
+    }
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -17,9 +73,9 @@ const VolunteerSignupPage: React.FC = () => {
   }
 
   const handleGoogleSignup = () => {
-    // Google Sign-up logic would go here
-    console.log('Google signup clicked')
-  }
+    // TODO: Implement Google signup logic
+    console.log('Google signup clicked');
+  };
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-gray-100 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
@@ -56,20 +112,26 @@ const VolunteerSignupPage: React.FC = () => {
           </div>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={(e) => e.preventDefault()}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {error && (
+            <div className="text-red-600 text-sm">{error}</div>
+          )}
+
           <div className="space-y-6">
             {/* Basic Information */}
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Basic Information</h3>
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label htmlFor="first_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Full Name *
                   </label>
                   <input
                     type="text"
-                    id="name"
+                    id="first_name"
                     required
+                    value={formData.first_name}
+                    onChange={handleInputChange}
                     className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 sm:text-sm"
                   />
                 </div>
@@ -82,62 +144,8 @@ const VolunteerSignupPage: React.FC = () => {
                     type="email"
                     id="email"
                     required
-                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 sm:text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="age" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Age *
-                  </label>
-                  <input
-                    type="number"
-                    id="age"
-                    required
-                    min="16"
-                    max="120"
-                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 sm:text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="gender" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Gender *
-                  </label>
-                  <select
-                    id="gender"
-                    required
-                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 sm:text-sm"
-                  >
-                    <option value="">Select gender</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="non-binary">Non-binary</option>
-                    <option value="other">Other</option>
-                    <option value="prefer-not-to-say">Prefer not to say</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Phone Number *
-                  </label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    required
-                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 sm:text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="occupation" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Occupation *
-                  </label>
-                  <input
-                    type="text"
-                    id="occupation"
-                    required
+                    value={formData.email}
+                    onChange={handleInputChange}
                     className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 sm:text-sm"
                   />
                 </div>
@@ -150,6 +158,8 @@ const VolunteerSignupPage: React.FC = () => {
                     type="password"
                     id="password"
                     required
+                    value={formData.password}
+                    onChange={handleInputChange}
                     className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 sm:text-sm"
                   />
                 </div>
@@ -162,7 +172,23 @@ const VolunteerSignupPage: React.FC = () => {
                     type="text"
                     id="location"
                     required
+                    value={formData.location}
+                    onChange={handleInputChange}
                     placeholder="City, Country"
+                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 sm:text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="skills" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Skills *
+                  </label>
+                  <input
+                    type="text"
+                    id="skills"
+                    required
+                    onChange={handleSkillsChange}
+                    placeholder="e.g., First Aid, Teaching, Project Management (comma-separated)"
                     className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 sm:text-sm"
                   />
                 </div>
@@ -252,19 +278,6 @@ const VolunteerSignupPage: React.FC = () => {
                     <option value="weekend-evening">Weekend Evenings</option>
                   </select>
                   <p className="mt-1 text-xs text-gray-500">Hold Ctrl/Cmd to select multiple options</p>
-                </div>
-
-                <div>
-                  <label htmlFor="skills" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Skills *
-                  </label>
-                  <input
-                    type="text"
-                    id="skills"
-                    required
-                    placeholder="e.g., First Aid, Teaching, Project Management (comma-separated)"
-                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 sm:text-sm"
-                  />
                 </div>
 
                 <div>

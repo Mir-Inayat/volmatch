@@ -1,26 +1,16 @@
 from rest_framework import serializers
-from .models import Volunteer, Opportunity, Application
 from django.contrib.auth.models import User
+from .models import Volunteer, Opportunity, Application
 
-class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
-
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username', 'password', 'email', 'first_name', 'last_name')
+        fields = ('id', 'username', 'email', 'first_name', 'last_name')
 
-    def create(self, validated_data):
-        user = User(
-            email=validated_data['email'],
-            username=validated_data['username'],
-            first_name=validated_data['first_name'],
-            last_name=validated_data['last_name']
-        )
-        user.set_password(validated_data['password'])
-        user.save()
-        return user
-
+# Add this back - it was missing
 class VolunteerSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    
     class Meta:
         model = Volunteer
         fields = '__all__'
@@ -34,3 +24,33 @@ class ApplicationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Application
         fields = '__all__'
+
+class RegisterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'email', 'password', 'first_name', 'last_name')
+        extra_kwargs = {'password': {'write_only': True}}
+
+class VolunteerProfileSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField()
+    activities = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Volunteer
+        fields = ['user', 'location', 'join_date', 'total_hours', 'skills', 'badges', 'activities']
+
+    def get_user(self, obj):
+        return {
+            'first_name': obj.user.first_name,
+            'last_name': obj.user.last_name,
+            'email': obj.user.email,
+        }
+
+    def get_activities(self, obj):
+        activities = obj.applications.filter(status='completed')
+        return [{
+            'id': app.id,
+            'title': app.opportunity.title,
+            'date': app.completion_date,
+            'hours': app.hours_completed
+        } for app in activities]

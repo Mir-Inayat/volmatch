@@ -3,7 +3,7 @@ import axios from 'axios';
 const BASE_URL = 'http://localhost:8000';
 // Update the axios instance configuration
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || `${BASE_URL}/api`,
+  baseURL: import.meta.env.VITE_API_URL || `${BASE_URL}`,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -12,11 +12,11 @@ const axiosInstance = axios.create({
 // Modify the request interceptor to skip auth for public routes
 axiosInstance.interceptors.request.use((config) => {
   // List of public routes that don't need authentication
-  const publicRoutes = ['/leaderboard'];
+  const publicRoutes = ['/api/leaderboard'];
   
   // Only add auth header if the route is not public
   if (!publicRoutes.some(route => config.url?.includes(route))) {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('authToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -31,7 +31,8 @@ axiosInstance.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // Clear invalid token
-      localStorage.removeItem('token');
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('refreshToken');
     }
     return Promise.reject(error);
   }
@@ -167,7 +168,7 @@ export const logout = async () => {
 
 export const getLeaderboard = async (): Promise<Volunteer[]> => {
   try {
-    const response = await axiosInstance.get('/leaderboard/');
+    const response = await axiosInstance.get('/api/leaderboard/');
     return response.data;
   } catch (error) {
     console.error("Error fetching leaderboard", error);

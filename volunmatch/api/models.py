@@ -54,12 +54,17 @@ class VolunteerRecommendation(models.Model):
 
 class Volunteer(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    location = models.CharField(max_length=100)
-    join_date = models.DateField(auto_now_add=True)
+    location = models.CharField(max_length=100, blank=True, default="")
+    join_date = models.DateField(default=timezone.now)
     total_hours = models.IntegerField(default=0)
     tasks_completed = models.IntegerField(default=0)
-    skills = models.JSONField(default=list)  # Stores list of skills
-    badges = models.JSONField(default=list)  # Stores list of badges earned
+    skills = models.JSONField(default=list)
+    badges = models.JSONField(default=list)
+    bio = models.TextField(blank=True)
+    interests = models.JSONField(default=list)
+    availability = models.JSONField(default=list)
+    experience = models.TextField(blank=True, null=True)
+    profile_image = models.ImageField(upload_to='profile_images/', blank=True, null=True)
 
 class VolunteerActivity(models.Model):
     volunteer = models.ForeignKey(Volunteer, on_delete=models.CASCADE, related_name='activities')
@@ -79,5 +84,16 @@ class Opportunity(models.Model):
 
 class Application(models.Model):
     volunteer = models.ForeignKey(Volunteer, on_delete=models.CASCADE)
-    opportunity = models.ForeignKey(Opportunity, on_delete=models.CASCADE)
+    opportunity = models.ForeignKey(VolunteerOpportunity, on_delete=models.CASCADE)
     date_applied = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('pending', 'Pending'),
+            ('accepted', 'Accepted'),
+            ('rejected', 'Rejected'),
+            ('completed', 'Completed')
+        ],
+        default='pending'
+    )
+    hours_completed = models.IntegerField(default=0)

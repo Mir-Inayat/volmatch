@@ -59,6 +59,11 @@ export interface RegisterData {
   last_name: string;
   location: string;
   skills: string[];
+  bio: string;
+  interests: string[];
+  availability: string[];
+  experience?: string;
+  profile_image?: string;
 }
 
 export interface LoginData {
@@ -107,15 +112,32 @@ export const updateProfile = async (profileData: Partial<Profile>) => {
   }
 };
 
-export const login = async (data: LoginData) => {
+export const login = async (email: string, password: string) => {
   try {
-    const response = await api.post('/api/login/', data);
-    if (response.data.token) {
-      localStorage.setItem('authToken', response.data.token);
-    }
+    const response = await api.post('/api/login/', { 
+      username: email,  // Keep username in the request for Django compatibility
+      password 
+    });
     return response.data;
   } catch (error) {
     console.error("Error logging in", error);
     throw error;
+  }
+};
+
+export const logout = async () => {
+  try {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (refreshToken) {
+      await api.post('/api/logout/', { refresh: refreshToken });
+    }
+    // Clear tokens regardless of API call success
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('refreshToken');
+  } catch (error) {
+    console.error("Error logging out", error);
+    // Still clear tokens even if API call fails
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('refreshToken');
   }
 };

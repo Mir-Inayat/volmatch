@@ -4,7 +4,7 @@ import { login } from '../api';
 import { ArrowLeft } from 'lucide-react';
 
 const VolunteerLoginPage: React.FC = () => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -19,19 +19,17 @@ const VolunteerLoginPage: React.FC = () => {
     setError(null);
 
     try {
-      const response = await login(username, password);
+      const response = await login(email, password);
       const accessToken = response.access;
       const refreshToken = response.refresh;
 
-      // Save the tokens in localStorage or a cookie
       localStorage.setItem('authToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
 
-      // Redirect to profile page
       navigate('/profile');
     } catch (err) {
       console.error('Login failed:', err);
-      setError('Invalid username or password.');
+      setError('Invalid email or password.');
     }
   };
 
@@ -47,7 +45,7 @@ const VolunteerLoginPage: React.FC = () => {
             Volunteer Login
           </h2>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            Welcome back! Please enter your username and password
+            Welcome back! Please enter your email and password
           </p>
         </div>
 
@@ -55,15 +53,15 @@ const VolunteerLoginPage: React.FC = () => {
           {error && <p className="text-red-500 text-sm">{error}</p>}
           <div className="rounded-md shadow-sm space-y-4">
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Username
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Email
               </label>
               <input
-                id="username"
-                name="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="email"
+                name="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm dark:bg-gray-700"
               />

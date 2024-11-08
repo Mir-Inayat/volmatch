@@ -47,10 +47,10 @@ class VolunteerProfileSerializer(serializers.ModelSerializer):
         }
 
     def get_activities(self, obj):
-        activities = obj.applications.filter(status='completed')
+        activities = obj.application_set.filter(status='completed')
         return [{
-            'id': app.id,
-            'title': app.opportunity.title,
-            'date': app.completion_date,
-            'hours': app.hours_completed
-        } for app in activities]
+            'id': activity.id,
+            'title': activity.opportunity.title,
+            'date': activity.opportunity.date,
+            'hours': activity.hours_completed
+        } for activity in activities]

@@ -64,22 +64,76 @@ class RecommendVolunteersForOpportunity(APIView):
         recommendations = rec_sys.get_volunteers_for_opportunity(opportunity_id, top_n=5)
         return Response(recommendations)
 
-class RegisterView(generics.CreateAPIView):
-    queryset = User.objects.all()
+class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]
-    serializer_class = RegisterSerializer
+
+    def post(self, request):
+        try:
+            # Create user
+            user_data = {
+                'username': request.data['username'],
+                'password': request.data['password'],
+                'email': request.data['email'],
+                'first_name': request.data['first_name'],
+                'last_name': request.data['last_name']
+            }
+            
+            user = User.objects.create_user(**user_data)
+            
+            # Create volunteer profile
+            volunteer_data = {
+                'user': user,
+                'location': request.data.get('location', ''),
+                'skills': request.data.get('skills', []),
+                'bio': request.data.get('bio', ''),
+                'interests': request.data.get('interests', []),
+                'availability': request.data.get('availability', []),
+                'experience': request.data.get('experience', '')
+            }
+            
+            volunteer = Volunteer.objects.create(**volunteer_data)
+            
+            # Generate token for auto-login
+            refresh = RefreshToken.for_user(user)
+            
+            return Response({
+                'token': str(refresh.access_token),
+                'refresh': str(refresh),
+                'user': {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email
+                }
+            }, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            return Response({
+                'error': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 class LogoutView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         try:
-            refresh_token = request.data["refresh"]
+            refresh_token = request.data.get("refresh")
+            if not refresh_token:
+                return Response(
+                    {"error": "Refresh token is required"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
             token = RefreshToken(refresh_token)
-            token.blacklist()  # Blacklist the refresh token
-            return Response(status=status.HTTP_205_RESET_CONTENT)
+            token.blacklist()
+            return Response(
+                {"message": "Successfully logged out"}, 
+                status=status.HTTP_200_OK
+            )
         except Exception as e:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": str(e)}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 class VolunteerListCreate(generics.ListCreateAPIView):
     queryset = Volunteer.objects.all()
@@ -198,10 +252,6 @@ class VolunteerActivityView(APIView):
                 {'error': 'Failed to add activity'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
-class RegisterVolunteerView(generics.CreateAPIView):
-    serializer_class = VolunteerProfileSerializer
-    permission_classes = [permissions.AllowAny]
 
 class VolunteerProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = VolunteerProfileSerializer

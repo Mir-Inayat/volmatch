@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Upload } from 'lucide-react';
-import { register } from '../api';
+import { register, RegisterData } from '../api';
 
 const VolunteerSignupPage: React.FC = () => {
   const navigate = useNavigate();
@@ -38,23 +38,37 @@ const VolunteerSignupPage: React.FC = () => {
     setError(null);
 
     try {
-      // Split full name into first and last name
-      const nameParts = formData.first_name.split(' ');
-      const firstName = nameParts[0];
-      const lastName = nameParts.slice(1).join(' ');
+      const interestsSelect = document.getElementById('interests') as HTMLSelectElement;
+      const availabilitySelect = document.getElementById('availability') as HTMLSelectElement;
+      const bioElement = document.getElementById('bio') as HTMLTextAreaElement;
+      const experienceElement = document.getElementById('experience') as HTMLTextAreaElement;
 
-      const registrationData = {
-        username: formData.email, // Using email as username
+      const selectedInterests = Array.from(interestsSelect.selectedOptions).map(option => option.value);
+      const selectedAvailability = Array.from(availabilitySelect.selectedOptions).map(option => option.value);
+
+      const registrationData: RegisterData = {
+        username: formData.email,
         password: formData.password,
         email: formData.email,
-        first_name: firstName,
-        last_name: lastName,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
         location: formData.location,
         skills: formData.skills,
+        bio: bioElement.value,
+        interests: selectedInterests,
+        availability: selectedAvailability,
+        experience: experienceElement.value,
+        profile_image: profileImage || undefined
       };
 
-      await register(registrationData);
-      navigate('/login'); // Redirect to login page after successful registration
+      const response = await register(registrationData);
+      
+      if (response.token) {
+        localStorage.setItem('authToken', response.token);
+        navigate('/profile');
+      } else {
+        setError('Registration failed. No authentication token received.');
+      }
     } catch (err) {
       setError('Registration failed. Please try again.');
       console.error('Registration error:', err);
@@ -124,13 +138,27 @@ const VolunteerSignupPage: React.FC = () => {
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
                   <label htmlFor="first_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Full Name *
+                    First Name *
                   </label>
                   <input
                     type="text"
                     id="first_name"
                     required
                     value={formData.first_name}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 sm:text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="last_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Last Name *
+                  </label>
+                  <input
+                    type="text"
+                    id="last_name"
+                    required
+                    value={formData.last_name}
                     onChange={handleInputChange}
                     className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 sm:text-sm"
                   />

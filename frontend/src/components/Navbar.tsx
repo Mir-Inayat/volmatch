@@ -1,11 +1,23 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useTheme } from '../contexts/ThemeContext'
-import { Sun, Moon, Menu } from 'lucide-react'
+import { Sun, Moon, Menu, LogOut } from 'lucide-react'
+import { logout } from '../api'
 
 const Navbar: React.FC = () => {
   const { theme, toggleTheme } = useTheme()
   const [isMenuOpen, setIsMenuOpen] = React.useState(false)
+  const navigate = useNavigate()
+  const isAuthenticated = !!localStorage.getItem('authToken')
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
 
   return (
     <nav className="bg-white dark:bg-gray-800 shadow-lg">
@@ -26,13 +38,30 @@ const Navbar: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="hidden md:block">
+          <div className="hidden md:flex items-center space-x-4">
             <button
               onClick={toggleTheme}
               className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
             >
               {theme === 'dark' ? <Sun size={24} /> : <Moon size={24} />}
             </button>
+
+            {isAuthenticated ? (
+              <button
+                onClick={handleLogout}
+                className="flex items-center px-4 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
+              >
+                <LogOut size={20} className="mr-2" />
+                Logout
+              </button>
+            ) : (
+              <Link
+                to="/login"
+                className="px-4 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+              >
+                Login
+              </Link>
+            )}
           </div>
           <div className="-mr-2 flex md:hidden">
             <button
@@ -54,6 +83,22 @@ const Navbar: React.FC = () => {
             <Link to="/leaderboard" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Leaderboard</Link>
             <Link to="/profile" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Profile</Link>
             <Link to="/rewards" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Rewards</Link>
+
+            {isAuthenticated ? (
+              <button
+                onClick={handleLogout}
+                className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+              >
+                Logout
+              </button>
+            ) : (
+              <Link
+                to="/login"
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+              >
+                Login
+              </Link>
+            )}
           </div>
         </div>
       )}

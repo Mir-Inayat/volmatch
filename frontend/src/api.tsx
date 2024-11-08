@@ -256,5 +256,69 @@ export const createComment = async (postId: number, content: string): Promise<Co
   }
 };
 
+export interface OrganizationRegisterData {
+  email: string;
+  password: string;
+  first_name: string;
+  last_name: string;
+  name: string;           // Organization name
+  description: string;
+  location: string;
+  website?: string;
+  phone?: string;
+  category: string;
+}
+
+export const registerOrganization = async (data: OrganizationRegisterData) => {
+  try {
+    const response = await axiosInstance.post('/api/register/organization/', data);
+    
+    localStorage.setItem('authToken', response.data.token);
+    localStorage.setItem('refreshToken', response.data.refresh);
+    localStorage.setItem('userType', 'organization');
+    
+    return response.data;
+  } catch (error: any) {
+    console.error("Error registering organization:", error.response?.data || error);
+    throw error.response?.data || error;
+  }
+};
+
+export const loginOrganization = async (username: string, password: string) => {
+  try {
+    const response = await axiosInstance.post('/api/login/organization/', { 
+      username,
+      password 
+    });
+    localStorage.setItem('authToken', response.data.access);
+    localStorage.setItem('refreshToken', response.data.refresh);
+    localStorage.setItem('userType', 'organization');
+    return response.data;
+  } catch (error) {
+    console.error("Error logging in", error);
+    throw error;
+  }
+};
+
+export const getOrganizationProfile = async () => {
+  try {
+    const response = await axiosInstance.get('/api/organization/profile/');
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching organization profile", error);
+    throw error;
+  }
+};
+
+export const updateOrganizationProfile = async (data: Partial<OrganizationProfile>) => {
+  try {
+    const response = await axiosInstance.patch('/api/organization/profile/', data);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating organization profile", error);
+    throw error;
+  }
+};
+
 // Add this line to export the instance
 export const api = axiosInstance;

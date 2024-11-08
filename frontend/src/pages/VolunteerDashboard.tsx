@@ -63,7 +63,7 @@ const VolunteerDashboard: React.FC = () => {
           <div className="px-4 py-5 sm:p-6">
             <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Contribution Chart</h2>
             <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-              <p className="text-gray-500 dark:text-gray-400">GitHub-style contribution chart placeholder</p>
+              <p className="text-gray-500 dark:text-gray-400">GitHub-style contribution chart coming soon!</p>
             </div>
           </div>
         </div>

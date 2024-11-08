@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Volunteer, Opportunity, Application, CommunityPost, PostLike, PostComment
+from .models import Volunteer, Opportunity, Application, CommunityPost, PostLike, PostComment, Organization
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -91,3 +91,28 @@ class CommunityPostSerializer(serializers.ModelSerializer):
             volunteer = Volunteer.objects.get(user=request.user)
             return obj.post_likes.filter(volunteer=volunteer).exists()
         return False
+
+class OrganizationSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    
+    class Meta:
+        model = Organization
+        fields = '__all__'
+
+class OrganizationProfileSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    opportunities = OpportunitySerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Organization
+        fields = [
+            'id',
+            'user',
+            'name',
+            'description',
+            'location',
+            'website',
+            'phone',
+            'category',
+            'opportunities'
+        ]

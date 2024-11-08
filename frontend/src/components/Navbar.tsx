@@ -41,7 +41,7 @@ const Navbar: React.FC = () => {
         {isAuthenticated && userType === 'organization' && (
           <>
             <Link to="/organization-dashboard" className={baseClasses}>Organization Dashboard</Link>
-            <Link to="/profile" className={baseClasses}>Profile</Link>
+            <Link to="/organization/profile" className={baseClasses}>Organization Profile</Link>
           </>
         )}
       </>

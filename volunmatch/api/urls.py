@@ -18,4 +18,6 @@ urlpatterns = [
     path('community/posts/', views.CommunityPostView.as_view(), name='community-posts'),
     path('community/posts/<int:post_id>/like/', views.PostLikeView.as_view(), name='post-like'),
     path('community/posts/<int:post_id>/comments/', views.PostCommentView.as_view(), name='post-comments'),
+    path('register/organization/', views.OrganizationRegisterView.as_view(), name='organization-register'),
+    path('organization/profile/', views.OrganizationProfileView.as_view(), name='organization-profile'),
 ]

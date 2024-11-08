@@ -29,6 +29,11 @@ from .models import CommunityPost
 from .serializers import CommunityPostSerializer
 from .models import PostLike, PostComment
 from .serializers import PostCommentSerializer
+from .serializers import (
+    UserSerializer, 
+    OpportunitySerializer,
+    OrganizationProfileSerializer
+)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginView(View):
@@ -381,3 +386,76 @@ class PostCommentView(APIView):
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+class OrganizationProfileView(generics.RetrieveUpdateAPIView):
+    serializer_class = OrganizationProfileSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return get_object_or_404(Organization, user=self.request.user)
+
+class OrganizationRegisterView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        try:
+            print("Received data:", request.data)  # For debugging
+            
+            # Check if user already exists
+            email = request.data.get('email')
+            if User.objects.filter(username=email).exists():
+                return Response({
+                    'error': 'An account with this email already exists'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Create user
+            user_data = {
+                'username': email,  # Use email as username
+                'email': email,
+                'password': request.data['password'],
+                'first_name': request.data['first_name'],
+                'last_name': request.data['last_name']
+            }
+            
+            try:
+                user = User.objects.create_user(**user_data)
+            except Exception as e:
+                return Response({
+                    'error': f'Error creating user: {str(e)}'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Create organization profile
+            organization_data = {
+                'user': user,
+                'name': request.data.get('name'),  # Organization name
+                'description': request.data.get('description', ''),
+                'location': request.data.get('location', ''),
+                'website': request.data.get('website', ''),
+                'phone': request.data.get('phone', ''),
+                'category': request.data.get('category', '')
+            }
+            
+            try:
+                organization = Organization.objects.create(**organization_data)
+            except Exception as e:
+                user.delete()  # Cleanup if organization creation fails
+                return Response({
+                    'error': f'Error creating organization: {str(e)}'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Generate token
+            refresh = RefreshToken.for_user(user)
+            
+            return Response({
+                'token': str(refresh.access_token),
+                'refresh': str(refresh),
+                'user': {
+                    'id': user.id,
+                    'email': user.email
+                }
+            }, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            return Response({
+                'error': f'Registration failed: {str(e)}'
+            }, status=status.HTTP_400_BAD_REQUEST)

@@ -18,6 +18,7 @@ import CommunityPage from './pages/CommunityPage';
 import OrganizationProfilePage from './pages/OrganizationProfilePage';
 import { AuthProvider } from './contexts/AuthContext';
 import LearnMorePage from './pages/LearnMorePage';
+import Footer from './components/Footer';
 
 const App: React.FC = () => {
   return (
@@ -45,6 +46,7 @@ const App: React.FC = () => {
                 <Route path="/about" element={<LearnMorePage />} />
               </Routes>
             </main>
+            <Footer />
           </div>
         </Router>
       </ThemeProvider>

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { PlusCircle, Users, Star } from 'lucide-react'
-import { getRecommendedVolunteers } from '../api'
+import { getRecommendedVolunteers, getOpportunities } from '../api'
 import OpportunityModal from '../components/OpportunityModal';
 import { createOpportunity } from '../api';
+import { Link } from 'react-router-dom'
 
 interface RecommendedVolunteer {
   volunteer_id: number;
@@ -11,12 +12,28 @@ interface RecommendedVolunteer {
   rating: number;
 }
 
+interface Opportunity {
+  id: number;
+  title: string;
+  date: string;
+  location: string;
+  volunteers_needed: number;
+  volunteers_registered: number;
+  created_at: string;
+}
+
+interface OpportunityFormData {
+  title: string;
+  date: string;
+  location: string;
+  volunteers_needed: number;
+  description?: string;
+  duration: number;
+  skills_required: string[];
+}
+
 const OrganizationDashboard: React.FC = () => {
-  const [opportunities, setOpportunities] = useState([
-    { id: 1, title: 'Community Garden Clean-up', date: '2023-06-15', location: 'Central Park', volunteers: 5 },
-    { id: 2, title: 'Food Bank Assistant', date: '2023-06-18', location: 'Downtown', volunteers: 10 },
-    { id: 3, title: 'Senior Home Visit', date: '2023-06-20', location: 'Sunshine Retirement Home', volunteers: 3 },
-  ])
+  const [opportunities, setOpportunities] = useState<Opportunity[]>([])
 
   const [recommendedVolunteers, setRecommendedVolunteers] = useState<RecommendedVolunteer[]>([])
   const [loading, setLoading] = useState(true)
@@ -47,6 +64,23 @@ const OrganizationDashboard: React.FC = () => {
     fetchRecommendedVolunteers();
   }, []);
 
+  useEffect(() => {
+    const fetchOpportunities = async () => {
+      try {
+        const data = await getOpportunities();
+        console.log('Fetched opportunities:', data);
+        const sortedOpportunities = data.sort((a: Opportunity, b: Opportunity) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        setOpportunities(sortedOpportunities);
+      } catch (error) {
+        console.error('Error fetching opportunities:', error);
+      }
+    };
+
+    fetchOpportunities();
+  }, []);
+
   const handleAddOpportunity = async (formData: OpportunityFormData) => {
     try {
       const newOpportunity = await createOpportunity(formData);
@@ -73,24 +107,34 @@ const OrganizationDashboard: React.FC = () => {
                 Add New
               </button>
             </div>
-            <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-              {opportunities.map((opportunity) => (
-                <li key={opportunity.id} className="py-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{opportunity.title}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                        {opportunity.date} - {opportunity.location}
-                      </p>
+            <div className="max-h-[400px] overflow-y-auto pr-2">
+              <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                {opportunities.map((opportunity) => (
+                  <li key={opportunity.id} className="py-4">
+                    <div className="flex items-center space-x-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{opportunity.title}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                          {new Date(opportunity.date).toLocaleDateString()} - {opportunity.location}
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <div className="inline-flex items-center text-sm font-semibold text-blue-600 dark:text-blue-400">
+                          <Users className="h-5 w-5 mr-1" />
+                          {opportunity.volunteers_registered}/{opportunity.volunteers_needed}
+                        </div>
+                        <Link
+                          to={`/opportunities/${opportunity.id}`}
+                          className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-600 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                          View Details
+                        </Link>
+                      </div>
                     </div>
-                    <div className="inline-flex items-center text-sm font-semibold text-blue-600 dark:text-blue-400">
-                      <Users className="h-5 w-5 mr-1" />
-                      {opportunity.volunteers}
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
 
@@ -100,42 +144,44 @@ const OrganizationDashboard: React.FC = () => {
             {loading ? (
               <div className="text-center text-gray-500 dark:text-gray-400">Loading recommendations...</div>
             ) : recommendedVolunteers.length > 0 ? (
-              <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-                {recommendedVolunteers.map((volunteer) => (
-                  <li key={volunteer.volunteer_id} className="py-4">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex-shrink-0">
-                        <img 
-                          className="h-8 w-8 rounded-full" 
-                          src={`https://ui-avatars.com/api/?name=${volunteer.name}&background=random`} 
-                          alt={volunteer.name} 
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                          {volunteer.name}
-                        </p>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {volunteer.skills.map((skill, index) => (
-                            <span 
-                              key={index}
-                              className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-xs"
-                            >
-                              {skill}
-                            </span>
-                          ))}
+              <div className="max-h-[400px] overflow-y-auto pr-2">
+                <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {recommendedVolunteers.map((volunteer) => (
+                    <li key={volunteer.volunteer_id} className="py-4">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex-shrink-0">
+                          <img 
+                            className="h-8 w-8 rounded-full" 
+                            src={`https://ui-avatars.com/api/?name=${volunteer.name}&background=random`} 
+                            alt={volunteer.name} 
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                            {volunteer.name}
+                          </p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {volunteer.skills.map((skill, index) => (
+                              <span 
+                                key={index}
+                                className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-xs"
+                              >
+                                {skill}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Star className="h-4 w-4 text-yellow-400" />
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                            {volunteer.rating.toFixed(1)}
+                          </span>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Star className="h-4 w-4 text-yellow-400" />
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                          {volunteer.rating.toFixed(1)}
-                        </span>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ) : (
               <div className="text-center text-gray-500 dark:text-gray-400">
                 No recommended volunteers found. Try adding more volunteer opportunities to get recommendations.

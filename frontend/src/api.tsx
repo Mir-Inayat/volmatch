@@ -73,6 +73,17 @@ export interface RegisterData {
   profile_image?: string;
 }
 
+export const getOpportunities = async () => {
+  try {
+    const response = await axiosInstance.get('/api/opportunities/');
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching opportunities:", error);
+    throw error;
+  }
+};
+
+
 export interface LoginData {
   username: string;
   password: string;
@@ -351,6 +362,16 @@ export const getRecommendedVolunteers = async () => {
   }
 };
 
+export interface OpportunityFormData {
+  title: string;
+  description: string;
+  location: string;
+  date: string;
+  duration: number;
+  skills_required: string[];
+  volunteers_needed: number;
+}
+
 export const createOpportunity = async (data: OpportunityFormData) => {
   try {
     const response = await axiosInstance.post('/api/opportunities/', {
@@ -367,3 +388,13 @@ export const createOpportunity = async (data: OpportunityFormData) => {
 
 // Add this line to export the instance
 export const api = axiosInstance;
+
+export interface OrganizationProfile {
+  name: string;
+  description: string;
+  location: string;
+  website?: string;
+  phone?: string;
+  category: string;
+  email: string;
+}

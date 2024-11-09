@@ -3,6 +3,7 @@ import { getOrganizationProfile, updateOrganizationProfile, createOpportunity } 
 import { useNavigate } from 'react-router-dom';
 import { PlusCircle } from 'lucide-react';
 import OpportunityModal from '../components/OpportunityModal';
+import OpportunityDetailsModal from '../components/OpportunityDetailsModal';
 
 interface OrganizationProfile {
   user: {
@@ -24,12 +25,24 @@ interface OrganizationProfile {
   }[];
 }
 
+interface OpportunityFormData {
+  title: string;
+  date: string;
+  volunteers_needed: number;
+  description: string;
+  location: string;
+  duration: string;
+  skills_required: string[];
+}
+
 const OrganizationProfilePage: React.FC = () => {
   const [profile, setProfile] = useState<OrganizationProfile | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<OrganizationProfile>>({});
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedOpportunity, setSelectedOpportunity] = useState<any>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
   useEffect(() => {
     loadProfile();
@@ -77,8 +90,8 @@ const OrganizationProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-gray-50">
+      <div className="bg-gray-50 dark:bg-gray-800 shadow rounded-lg p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Organization Profile</h1>
           <button
@@ -230,29 +243,34 @@ const OrganizationProfilePage: React.FC = () => {
                   </div>
                 </h3>
                 {profile.opportunities && profile.opportunities.length > 0 ? (
-                  <ul className="mt-4 space-y-4">
-                    {profile.opportunities.map(opportunity => (
-                      <li key={opportunity.id} className="text-sm p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                        <div className="flex justify-between items-center">
-                          <span className="font-medium text-gray-900 dark:text-white">{opportunity.title}</span>
-                          <div className="flex items-center space-x-4">
-                            <span className="text-gray-500 dark:text-gray-400">
-                              {opportunity.volunteers_registered}/{opportunity.volunteers_needed} volunteers
-                            </span>
-                            <button
-                              onClick={() => navigate(`/organization/opportunities/${opportunity.id}`)}
-                              className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-                            >
-                              View Details
-                            </button>
+                  <div className="mt-4 max-h-[400px] overflow-y-auto pr-2">
+                    <ul className="space-y-4">
+                      {profile.opportunities.map(opportunity => (
+                        <li key={opportunity.id} className="text-sm p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium text-gray-900 dark:text-white">{opportunity.title}</span>
+                            <div className="flex items-center space-x-4">
+                              <span className="text-gray-500 dark:text-gray-400">
+                                {opportunity.volunteers_registered}/{opportunity.volunteers_needed} volunteers
+                              </span>
+                              <button
+                                onClick={() => {
+                                  setSelectedOpportunity(opportunity);
+                                  setIsDetailsModalOpen(true);
+                                }}
+                                className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                              >
+                                View Details
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                        <div className="text-gray-500 dark:text-gray-400 mt-1">
-                          Date: {new Date(opportunity.date).toLocaleDateString()}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
+                          <div className="text-gray-500 dark:text-gray-400 mt-1">
+                            Date: {new Date(opportunity.date).toLocaleDateString()}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 ) : (
                   <div className="mt-4 text-center p-6 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
@@ -277,6 +295,13 @@ const OrganizationProfilePage: React.FC = () => {
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleAddOpportunity}
       />
+      {selectedOpportunity && (
+        <OpportunityDetailsModal
+          isOpen={isDetailsModalOpen}
+          onClose={() => setIsDetailsModalOpen(false)}
+          opportunity={selectedOpportunity}
+        />
+      )}
     </div>
   );
 };

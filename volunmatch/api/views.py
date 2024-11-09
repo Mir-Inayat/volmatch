@@ -167,8 +167,14 @@ class VolunteerListCreate(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
 class OpportunityListCreate(generics.ListCreateAPIView):
-    queryset = Opportunity.objects.all()
+    queryset = VolunteerOpportunity.objects.all()
     serializer_class = OpportunitySerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        # Link the opportunity to the organization
+        organization = Organization.objects.get(user=self.request.user)
+        serializer.save(organization=organization)
 
 class ApplicationListCreate(generics.ListCreateAPIView):
     queryset = Application.objects.all()
@@ -588,55 +594,42 @@ class RecommendVolunteersForOrganization(APIView):
 
     def get(self, request):
         try:
-            # Debug prints
-            print("User:", request.user)
-            print("Auth:", request.auth)
-            
             organization = get_object_or_404(Organization, user=request.user)
-            print("Organization found:", organization)
-            
-            # Get organization's opportunities
             opportunities = organization.opportunities.all()
-            print("Opportunities count:", opportunities.count())
             
             if not opportunities.exists():
-                return Response(
-                    {'message': 'No opportunities found for this organization'},
-                    status=status.HTTP_200_OK
-                )
+                return Response({
+                    'message': 'No opportunities found for this organization',
+                    'volunteers': []
+                }, status=status.HTTP_200_OK)
             
-            # Initialize recommendation system
             rec_sys = VolunteerRecommendationSystem()
             rec_sys.fetch_data()
             rec_sys.preprocess_data()
             rec_sys.train_content_based_model()
             
-            # Get recommended volunteers for each opportunity
             recommended_volunteers = set()
             for opportunity in opportunities:
                 volunteers = rec_sys.get_volunteers_for_opportunity(opportunity.id, top_n=3)
-                if volunteers:  # Only update if volunteers were found
+                if volunteers:
                     recommended_volunteers.update(volunteers)
             
-            # Convert to list and limit to top 10
             recommendations = list(recommended_volunteers)[:10]
             
             if not recommendations:
-                return Response(
-                    {'message': 'No recommended volunteers found'},
-                    status=status.HTTP_200_OK
-                )
+                return Response({
+                    'message': 'No recommended volunteers found',
+                    'volunteers': []
+                }, status=status.HTTP_200_OK)
             
-            return Response(recommendations)
+            return Response({
+                'message': 'Successfully found recommendations',
+                'volunteers': recommendations
+            })
             
-        except Organization.DoesNotExist:
-            return Response(
-                {'error': 'Organization not found for this user'},
-                status=status.HTTP_404_NOT_FOUND
-            )
         except Exception as e:
-            print("Error in recommendation:", str(e))  # Debug print
-            return Response(
-                {'error': str(e)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            print("Error in recommendation:", str(e))
+            return Response({
+                'error': str(e),
+                'volunteers': []
+            }, status=status.HTTP_400_BAD_REQUEST)

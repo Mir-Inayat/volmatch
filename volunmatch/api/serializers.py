@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Volunteer, Opportunity, Application, CommunityPost, PostLike, PostComment, Organization
+from .models import Volunteer, Opportunity, Application, CommunityPost, PostLike, PostComment, Organization, VolunteerOpportunity
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -17,8 +17,19 @@ class VolunteerSerializer(serializers.ModelSerializer):
 
 class OpportunitySerializer(serializers.ModelSerializer):
     class Meta:
-        model = Opportunity
-        fields = '__all__'
+        model = VolunteerOpportunity
+        fields = [
+            'id',
+            'title',
+            'description',
+            'date',
+            'location',
+            'volunteers_needed',
+            'volunteers_registered',
+            'skills_required',
+            'created_at'
+        ]
+        read_only_fields = ['volunteers_registered', 'created_at']
 
 class ApplicationSerializer(serializers.ModelSerializer):
     class Meta:

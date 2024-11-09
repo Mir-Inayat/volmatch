@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { getOrganizationProfile, updateOrganizationProfile } from '../api';
+import { getOrganizationProfile, updateOrganizationProfile, createOpportunity } from '../api';
+import { useNavigate } from 'react-router-dom';
+import { PlusCircle } from 'lucide-react';
+import OpportunityModal from '../components/OpportunityModal';
 
 interface OrganizationProfile {
   user: {
@@ -25,6 +28,8 @@ const OrganizationProfilePage: React.FC = () => {
   const [profile, setProfile] = useState<OrganizationProfile | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<OrganizationProfile>>({});
+  const navigate = useNavigate();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     loadProfile();
@@ -56,6 +61,15 @@ const OrganizationProfilePage: React.FC = () => {
       ...formData,
       [e.target.name]: e.target.value
     });
+  };
+
+  const handleAddOpportunity = async (formData: OpportunityFormData) => {
+    try {
+      const newOpportunity = await createOpportunity(formData);
+      await loadProfile();
+    } catch (error) {
+      console.error('Error creating opportunity:', error);
+    }
   };
 
   if (!profile) {
@@ -203,29 +217,66 @@ const OrganizationProfilePage: React.FC = () => {
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white">Description</h3>
                 <p className="mt-4 text-sm text-gray-900 dark:text-white">{profile.description || 'No description provided'}</p>
 
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mt-8">Opportunities</h3>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mt-8">
+                  <div className="flex justify-between items-center">
+                    <span>Opportunities</span>
+                    <button
+                      onClick={() => setIsModalOpen(true)}
+                      className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      <PlusCircle className="h-4 w-4 mr-1" />
+                      Add Opportunity
+                    </button>
+                  </div>
+                </h3>
                 {profile.opportunities && profile.opportunities.length > 0 ? (
                   <ul className="mt-4 space-y-4">
                     {profile.opportunities.map(opportunity => (
-                      <li key={opportunity.id} className="text-sm">
+                      <li key={opportunity.id} className="text-sm p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                         <div className="flex justify-between items-center">
                           <span className="font-medium text-gray-900 dark:text-white">{opportunity.title}</span>
-                          <span className="text-gray-500 dark:text-gray-400">
-                            {opportunity.volunteers_registered}/{opportunity.volunteers_needed} volunteers
-                          </span>
+                          <div className="flex items-center space-x-4">
+                            <span className="text-gray-500 dark:text-gray-400">
+                              {opportunity.volunteers_registered}/{opportunity.volunteers_needed} volunteers
+                            </span>
+                            <button
+                              onClick={() => navigate(`/organization/opportunities/${opportunity.id}`)}
+                              className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                            >
+                              View Details
+                            </button>
+                          </div>
                         </div>
-                        <div className="text-gray-500 dark:text-gray-400">Date: {new Date(opportunity.date).toLocaleDateString()}</div>
+                        <div className="text-gray-500 dark:text-gray-400 mt-1">
+                          Date: {new Date(opportunity.date).toLocaleDateString()}
+                        </div>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">No opportunities posted yet</p>
+                  <div className="mt-4 text-center p-6 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                      No opportunities posted yet
+                    </p>
+                    <button
+                      onClick={() => setIsModalOpen(true)}
+                      className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      <PlusCircle className="h-5 w-5 mr-2" />
+                      Create Your First Opportunity
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
           </div>
         )}
       </div>
+      <OpportunityModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleAddOpportunity}
+      />
     </div>
   );
 };

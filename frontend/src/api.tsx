@@ -340,13 +340,27 @@ export const updateOrganizationProfile = async (data: Partial<OrganizationProfil
 export const getRecommendedVolunteers = async () => {
   try {
     const response = await axiosInstance.get('/api/recommendations/volunteers/');
-    return response.data;
+    return response.data.volunteers || [];
   } catch (error: any) {
     console.error("Error fetching recommended volunteers:", {
       message: error.message,
       response: error.response?.data,
       status: error.response?.status
     });
+    return [];
+  }
+};
+
+export const createOpportunity = async (data: OpportunityFormData) => {
+  try {
+    const response = await axiosInstance.post('/api/opportunities/', {
+      ...data,
+      volunteers_registered: 0,  // Set default value
+      skills_required: Array.isArray(data.skills_required) ? data.skills_required : []
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error creating opportunity:", error);
     throw error;
   }
 };

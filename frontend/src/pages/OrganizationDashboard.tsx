@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { PlusCircle, Users, Star } from 'lucide-react'
 import { getRecommendedVolunteers } from '../api'
+import OpportunityModal from '../components/OpportunityModal';
+import { createOpportunity } from '../api';
 
 interface RecommendedVolunteer {
   volunteer_id: number;
@@ -18,6 +20,7 @@ const OrganizationDashboard: React.FC = () => {
 
   const [recommendedVolunteers, setRecommendedVolunteers] = useState<RecommendedVolunteer[]>([])
   const [loading, setLoading] = useState(true)
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchRecommendedVolunteers = async () => {
@@ -44,17 +47,14 @@ const OrganizationDashboard: React.FC = () => {
     fetchRecommendedVolunteers();
   }, []);
 
-  const handleAddOpportunity = () => {
-    // This would typically open a modal or form to add a new opportunity
-    const newOpportunity = {
-      id: opportunities.length + 1,
-      title: 'New Volunteer Opportunity',
-      date: '2023-07-01',
-      location: 'TBD',
-      volunteers: 0,
+  const handleAddOpportunity = async (formData: OpportunityFormData) => {
+    try {
+      const newOpportunity = await createOpportunity(formData);
+      setOpportunities([...opportunities, newOpportunity]);
+    } catch (error) {
+      console.error('Error creating opportunity:', error);
     }
-    setOpportunities([...opportunities, newOpportunity])
-  }
+  };
 
   return (
     <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
@@ -66,7 +66,7 @@ const OrganizationDashboard: React.FC = () => {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-medium text-gray-900 dark:text-white">Volunteer Opportunities</h2>
               <button
-                onClick={handleAddOpportunity}
+                onClick={() => setIsModalOpen(true)}
                 className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 <PlusCircle className="h-5 w-5 mr-2" />
@@ -177,6 +177,11 @@ const OrganizationDashboard: React.FC = () => {
           </div>
         </div>
       </div>
+      <OpportunityModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleAddOpportunity}
+      />
     </div>
   )
 }

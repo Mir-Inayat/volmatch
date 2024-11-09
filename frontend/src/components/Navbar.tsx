@@ -3,17 +3,18 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useTheme } from '../contexts/ThemeContext'
 import { Sun, Moon, Menu, LogOut } from 'lucide-react'
 import { logout } from '../api'
+import { useAuth } from '../contexts/AuthContext'
 
 const Navbar: React.FC = () => {
-  const { theme, toggleTheme } = useTheme()
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false)
-  const navigate = useNavigate()
-  const isAuthenticated = !!localStorage.getItem('authToken')
-  const userType = localStorage.getItem('userType')
+  const { isAuthenticated, userType, setAuth } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
       await logout();
+      setAuth(false, null);
       setIsMenuOpen(false);
       navigate('/');
     } catch (error) {
@@ -29,6 +30,15 @@ const Navbar: React.FC = () => {
     return (
       <>
         <Link to="/" className={baseClasses}>Home</Link>
+        
+        {!isAuthenticated && (
+          <>
+            <Link to="/about" className={baseClasses}>Learn More</Link>
+            <Link to="/signup" className={`${baseClasses} text-blue-600 hover:text-blue-700`}>
+              Get Started
+            </Link>
+          </>
+        )}
         
         {isAuthenticated && userType === 'volunteer' && (
           <>

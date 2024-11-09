@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { login } from '../api';
 import { ArrowLeft } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 const VolunteerLoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { setAuth } = useAuth();
 
   const handleGoogleLogin = () => {
     console.log('Google login clicked');
@@ -32,6 +34,7 @@ const VolunteerLoginPage: React.FC = () => {
       localStorage.setItem('refreshToken', response.refresh);
       localStorage.setItem('userType', 'volunteer');
 
+      setAuth(true, 'volunteer');
       navigate('/profile');
     } catch (err: any) {
       console.error('Login failed:', err);

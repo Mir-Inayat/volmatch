@@ -1,10 +1,10 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { Heart, Users, Award } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
 
 const HomePage: React.FC = () => {
-  const isAuthenticated = localStorage.getItem('authToken') !== null;
-  const userType = localStorage.getItem('userType');
+  const { isAuthenticated, userType } = useAuth();
 
   const renderAuthButtons = () => {
     if (isAuthenticated) {

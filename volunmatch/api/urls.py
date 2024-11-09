@@ -21,4 +21,5 @@ urlpatterns = [
     path('register/organization/', views.OrganizationRegisterView.as_view(), name='organization-register'),
     path('organization/profile/', views.OrganizationProfileView.as_view(), name='organization-profile'),
     path('login/organization/', views.OrganizationLoginView.as_view(), name='organization-login'),
+    path('recommendations/volunteers/', views.RecommendVolunteersForOrganization.as_view(), name='recommend-volunteers-for-org'),
 ]

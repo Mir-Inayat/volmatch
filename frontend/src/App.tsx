@@ -16,17 +16,16 @@ import ProfilePage from './pages/ProfilePage';
 import RewardsPage from './pages/RewardsPage';
 import CommunityPage from './pages/CommunityPage';
 import OrganizationProfilePage from './pages/OrganizationProfilePage';
+import { AuthProvider } from './contexts/AuthContext';
+import LearnMorePage from './pages/LearnMorePage';
+import Layout from './components/Layout';
 
 const App: React.FC = () => {
   return (
-    <ThemeProvider>
-      <Router>
-        <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-          <Navbar />
-          <header className="flex justify-bestween p-4 bg-blue-500 text-white">
-            {/* Custom login and logout buttons or any other auth component */}
-          </header>
-          <main>
+    <AuthProvider>
+      <ThemeProvider>
+        <Router>
+          <Layout>
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/signup" element={<SignupPage />} />
@@ -42,11 +41,12 @@ const App: React.FC = () => {
               <Route path="/rewards" element={<RewardsPage />} />
               <Route path="/community" element={<CommunityPage />} />
               <Route path="/organization/profile" element={<OrganizationProfilePage />} />
+              <Route path="/about" element={<LearnMorePage />} />
             </Routes>
-          </main>
-        </div>
-      </Router>
-    </ThemeProvider>
+          </Layout>
+        </Router>
+      </ThemeProvider>
+    </AuthProvider>
   );
 };
 

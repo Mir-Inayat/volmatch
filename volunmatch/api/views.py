@@ -582,3 +582,61 @@ class OrganizationLoginView(View):
         else:
             print("Authentication failed")  # Add this log
             return JsonResponse({'error': 'Invalid credentials'}, status=400)
+
+class RecommendVolunteersForOrganization(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            # Debug prints
+            print("User:", request.user)
+            print("Auth:", request.auth)
+            
+            organization = get_object_or_404(Organization, user=request.user)
+            print("Organization found:", organization)
+            
+            # Get organization's opportunities
+            opportunities = organization.opportunities.all()
+            print("Opportunities count:", opportunities.count())
+            
+            if not opportunities.exists():
+                return Response(
+                    {'message': 'No opportunities found for this organization'},
+                    status=status.HTTP_200_OK
+                )
+            
+            # Initialize recommendation system
+            rec_sys = VolunteerRecommendationSystem()
+            rec_sys.fetch_data()
+            rec_sys.preprocess_data()
+            rec_sys.train_content_based_model()
+            
+            # Get recommended volunteers for each opportunity
+            recommended_volunteers = set()
+            for opportunity in opportunities:
+                volunteers = rec_sys.get_volunteers_for_opportunity(opportunity.id, top_n=3)
+                if volunteers:  # Only update if volunteers were found
+                    recommended_volunteers.update(volunteers)
+            
+            # Convert to list and limit to top 10
+            recommendations = list(recommended_volunteers)[:10]
+            
+            if not recommendations:
+                return Response(
+                    {'message': 'No recommended volunteers found'},
+                    status=status.HTTP_200_OK
+                )
+            
+            return Response(recommendations)
+            
+        except Organization.DoesNotExist:
+            return Response(
+                {'error': 'Organization not found for this user'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            print("Error in recommendation:", str(e))  # Debug print
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )

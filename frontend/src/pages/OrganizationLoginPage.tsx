@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { loginOrganization } from '../api';
+import { useAuth } from '../contexts/AuthContext';
 
 const OrganizationLoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -10,11 +11,13 @@ const OrganizationLoginPage: React.FC = () => {
     password: '',
   });
   const [error, setError] = useState('');
+  const { setAuth } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await loginOrganization(formData.email, formData.password);
+      const response = await loginOrganization(formData.email, formData.password);
+      setAuth(true, 'organization');
       navigate('/organization-dashboard');
     } catch (err: any) {
       console.error('Login error details:', err.response?.data);

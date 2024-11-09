@@ -337,5 +337,19 @@ export const updateOrganizationProfile = async (data: Partial<OrganizationProfil
   }
 };
 
+export const getRecommendedVolunteers = async () => {
+  try {
+    const response = await axiosInstance.get('/api/recommendations/volunteers/');
+    return response.data;
+  } catch (error: any) {
+    console.error("Error fetching recommended volunteers:", {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    });
+    throw error;
+  }
+};
+
 // Add this line to export the instance
 export const api = axiosInstance;

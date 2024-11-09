@@ -18,32 +18,34 @@ import CommunityPage from './pages/CommunityPage';
 import OrganizationProfilePage from './pages/OrganizationProfilePage';
 import { AuthProvider } from './contexts/AuthContext';
 import LearnMorePage from './pages/LearnMorePage';
-import Layout from './components/Layout';
 
 const App: React.FC = () => {
   return (
     <AuthProvider>
       <ThemeProvider>
         <Router>
-          <Layout>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/signup" element={<SignupPage />} />
-              <Route path="/signup/volunteer" element={<VolunteerSignupPage />} />
-              <Route path="/signup/organization" element={<OrganizationSignupPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/login/volunteer" element={<VolunteerLoginPage />} />
-              <Route path="/login/organization" element={<OrganizationLoginPage />} />
-              <Route path="/volunteer-dashboard" element={<VolunteerDashboard />} />
-              <Route path="/organization-dashboard" element={<OrganizationDashboard />} />
-              <Route path="/leaderboard" element={<LeaderboardPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/rewards" element={<RewardsPage />} />
-              <Route path="/community" element={<CommunityPage />} />
-              <Route path="/organization/profile" element={<OrganizationProfilePage />} />
-              <Route path="/about" element={<LearnMorePage />} />
-            </Routes>
-          </Layout>
+          <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+            <Navbar />
+            <main>
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/signup" element={<SignupPage />} />
+                <Route path="/signup/volunteer" element={<VolunteerSignupPage />} />
+                <Route path="/signup/organization" element={<OrganizationSignupPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/login/volunteer" element={<VolunteerLoginPage />} />
+                <Route path="/login/organization" element={<OrganizationLoginPage />} />
+                <Route path="/volunteer-dashboard" element={<VolunteerDashboard />} />
+                <Route path="/organization-dashboard" element={<OrganizationDashboard />} />
+                <Route path="/leaderboard" element={<LeaderboardPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/rewards" element={<RewardsPage />} />
+                <Route path="/community" element={<CommunityPage />} />
+                <Route path="/organization/profile" element={<OrganizationProfilePage />} />
+                <Route path="/about" element={<LearnMorePage />} />
+              </Routes>
+            </main>
+          </div>
         </Router>
       </ThemeProvider>
     </AuthProvider>

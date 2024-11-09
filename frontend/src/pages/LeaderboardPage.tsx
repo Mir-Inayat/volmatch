@@ -33,11 +33,15 @@ const LeaderboardPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div
+      className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8"
+    >
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Global Leaderboard</h1>
       
       <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <table
+          className="min-w-full divide-y divide-gray-200 dark:divide-gray-700"
+        >
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">

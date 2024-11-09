@@ -4,6 +4,7 @@ import { useTheme } from '../contexts/ThemeContext'
 import { Sun, Moon, Menu, LogOut } from 'lucide-react'
 import { logout } from '../api'
 import { useAuth } from '../contexts/AuthContext'
+import logo from '../img/logo.jpg';
 
 const Navbar: React.FC = () => {
   const { isAuthenticated, userType, setAuth } = useAuth();
@@ -64,8 +65,13 @@ const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-            <Link to="/" className="flex-shrink-0">
-              <img className="h-8 w-8" src="/logo.svg" alt="VolunMatch" />
+            <Link to="/" className="flex items-center">
+              <img 
+                src={logo} 
+                alt="VolunMatch Logo" 
+                className="h-8 w-8 rounded-full mr-2"
+              />
+              <span className="text-xl font-bold text-gray-900 dark:text-white">VolunMatch</span>
             </Link>
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-4">

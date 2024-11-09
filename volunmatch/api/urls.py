@@ -20,4 +20,5 @@ urlpatterns = [
     path('community/posts/<int:post_id>/comments/', views.PostCommentView.as_view(), name='post-comments'),
     path('register/organization/', views.OrganizationRegisterView.as_view(), name='organization-register'),
     path('organization/profile/', views.OrganizationProfileView.as_view(), name='organization-profile'),
+    path('login/organization/', views.OrganizationLoginView.as_view(), name='organization-login'),
 ]

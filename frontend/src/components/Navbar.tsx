@@ -14,6 +14,7 @@ const Navbar: React.FC = () => {
   const handleLogout = async () => {
     try {
       await logout();
+      setIsMenuOpen(false);
       navigate('/');
     } catch (error) {
       console.error('Logout failed:', error);

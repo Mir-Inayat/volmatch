@@ -39,23 +39,38 @@ from .serializers import (
 class LoginView(View):
     def post(self, request, *args, **kwargs):
         data = json.loads(request.body)
-        username = data.get('username')
+        email = data.get('email')
         password = data.get('password')
 
-        user = authenticate(request, username=username, password=password)
+        user = authenticate(request, username=email, password=password)
         
         if user is not None:
-            login(request, user)
-            # Create a token for the user
-            refresh = RefreshToken.for_user(user)
-            return JsonResponse({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-                'message': 'Login successful'
-            })
+            try:
+                # Verify this is a volunteer account
+                volunteer = Volunteer.objects.get(user=user)
+                login(request, user)
+                refresh = RefreshToken.for_user(user)
+                return JsonResponse({
+                    'refresh': str(refresh),
+                    'access': str(refresh.access_token),
+                    'user_type': 'volunteer',
+                    'message': 'Login successful',
+                    'user': {
+                        'id': user.id,
+                        'email': user.email,
+                        'first_name': user.first_name,
+                        'last_name': user.last_name
+                    }
+                })
+            except Volunteer.DoesNotExist:
+                return JsonResponse({
+                    'error': 'This account is not registered as a volunteer'
+                }, status=400)
         else:
-            return JsonResponse({'error': 'Invalid credentials'}, status=400)
-        
+            return JsonResponse({
+                'error': 'Invalid email or password'
+            }, status=400)
+
 class RecommendOpportunitiesForVolunteer(APIView):
     def get(self, request, volunteer_id):
         rec_sys = VolunteerRecommendationSystem()
@@ -264,12 +279,88 @@ class VolunteerActivityView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-class VolunteerProfileView(generics.RetrieveUpdateAPIView):
-    serializer_class = VolunteerProfileSerializer
+class VolunteerProfileView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_object(self):
-        return get_object_or_404(Volunteer, user=self.request.user)
+    def get(self, request):
+        try:
+            # Get the volunteer profile for the logged-in user
+            volunteer = get_object_or_404(Volunteer, user=request.user)
+            
+            # Format the response data
+            profile_data = {
+                'user': {
+                    'first_name': request.user.first_name,
+                    'last_name': request.user.last_name,
+                    'email': request.user.email,
+                },
+                'location': volunteer.location,
+                'join_date': volunteer.join_date,
+                'total_hours': volunteer.total_hours,
+                'tasks_completed': volunteer.tasks_completed,
+                'skills': volunteer.skills,
+                'badges': volunteer.badges,
+                'activities': []
+            }
+
+            # Get related activities
+            activities = volunteer.activities.all().order_by('-date')[:5]  # Get 5 most recent activities
+            profile_data['activities'] = [
+                {
+                    'id': activity.id,
+                    'title': activity.title,
+                    'date': activity.date,
+                    'hours': activity.hours
+                }
+                for activity in activities
+            ]
+
+            return Response(profile_data)
+        except Exception as e:
+            return Response(
+                {'error': 'Failed to fetch profile data'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def patch(self, request):
+        try:
+            volunteer = Volunteer.objects.get(user=request.user)
+            
+            # Update user fields
+            user_data = {}
+            if 'first_name' in request.data:
+                user_data['first_name'] = request.data['first_name']
+            if 'last_name' in request.data:
+                user_data['last_name'] = request.data['last_name']
+            
+            if user_data:
+                User.objects.filter(id=request.user.id).update(**user_data)
+            
+            # Update volunteer fields
+            volunteer_data = {}
+            if 'location' in request.data:
+                volunteer_data['location'] = request.data['location']
+            if 'skills' in request.data:
+                volunteer_data['skills'] = request.data['skills']
+            
+            if volunteer_data:
+                Volunteer.objects.filter(id=volunteer.id).update(**volunteer_data)
+            
+            # Return updated profile
+            updated_volunteer = Volunteer.objects.get(id=volunteer.id)
+            serializer = VolunteerProfileSerializer(updated_volunteer)
+            return Response(serializer.data)
+            
+        except Volunteer.DoesNotExist:
+            return Response(
+                {'error': 'Volunteer profile not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'error': str(e)}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 class LeaderboardView(APIView):
     def get(self, request):
@@ -399,15 +490,13 @@ class OrganizationRegisterView(APIView):
 
     def post(self, request):
         try:
-            print("Received data:", request.data)  # For debugging
-            
             # Check if user already exists
             email = request.data.get('email')
-            if User.objects.filter(username=email).exists():
+            if User.objects.filter(email=email).exists():
                 return Response({
                     'error': 'An account with this email already exists'
                 }, status=status.HTTP_400_BAD_REQUEST)
-            
+
             # Create user
             user_data = {
                 'username': email,  # Use email as username
@@ -427,7 +516,7 @@ class OrganizationRegisterView(APIView):
             # Create organization profile
             organization_data = {
                 'user': user,
-                'name': request.data.get('name'),  # Organization name
+                'name': request.data.get('name'),
                 'description': request.data.get('description', ''),
                 'location': request.data.get('location', ''),
                 'website': request.data.get('website', ''),
@@ -459,3 +548,37 @@ class OrganizationRegisterView(APIView):
             return Response({
                 'error': f'Registration failed: {str(e)}'
             }, status=status.HTTP_400_BAD_REQUEST)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class OrganizationLoginView(View):
+    def post(self, request, *args, **kwargs):
+        data = json.loads(request.body)
+        print("Received login data:", data)  # Add this log
+        email = data.get('email')
+        password = data.get('password')
+
+        print("Attempting login with:", email)  # Add this log
+        user = authenticate(request, username=email, password=password)
+        
+        if user is not None:
+            try:
+                # Verify this is an organization account
+                organization = Organization.objects.get(user=user)
+                print("Found organization:", organization.name)  # Add this log
+                login(request, user)
+                refresh = RefreshToken.for_user(user)
+                return JsonResponse({
+                    'refresh': str(refresh),
+                    'access': str(refresh.access_token),
+                    'message': 'Login successful',
+                    'organization': {
+                        'id': organization.id,
+                        'name': organization.name
+                    }
+                })
+            except Organization.DoesNotExist:
+                print("No organization found for user")  # Add this log
+                return JsonResponse({'error': 'This account is not registered as an organization'}, status=400)
+        else:
+            print("Authentication failed")  # Add this log
+            return JsonResponse({'error': 'Invalid credentials'}, status=400)

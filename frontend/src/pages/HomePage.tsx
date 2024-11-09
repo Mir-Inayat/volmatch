@@ -3,6 +3,79 @@ import { Link } from 'react-router-dom'
 import { Heart, Users, Award } from 'lucide-react'
 
 const HomePage: React.FC = () => {
+  const isAuthenticated = localStorage.getItem('authToken') !== null;
+  const userType = localStorage.getItem('userType');
+
+  const renderAuthButtons = () => {
+    if (isAuthenticated) {
+      return (
+        <div className="mt-10 flex justify-center space-x-4">
+          <Link 
+            to={userType === 'volunteer' ? '/volunteer-dashboard' : '/organization-dashboard'} 
+            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-800 hover:bg-blue-700"
+          >
+            Go to Dashboard
+          </Link>
+        </div>
+      );
+    }
+
+    return (
+      <div className="mt-10 flex justify-center space-x-4">
+        <Link to="/signup" className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-800 hover:bg-blue-700">
+          Sign Up
+        </Link>
+        <Link to="/login" className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50">
+          Log In
+        </Link>
+      </div>
+    );
+  };
+
+  const renderCallToAction = () => {
+    if (isAuthenticated) {
+      return (
+        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8">
+          <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl">
+            <span className="block">Welcome back!</span>
+            <span className="block text-blue-600">Continue making a difference.</span>
+          </h2>
+          <div className="mt-8 flex justify-center">
+            <div className="inline-flex rounded-md shadow">
+              <Link 
+                to={userType === 'volunteer' ? '/opportunities' : '/organization/opportunities'} 
+                className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+              >
+                {userType === 'volunteer' ? 'Browse Opportunities' : 'Manage Opportunities'}
+              </Link>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8">
+        <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl">
+          <span className="block">Ready to make a difference?</span>
+          <span className="block text-blue-600">Join VolunMatch today.</span>
+        </h2>
+        <div className="mt-8 flex justify-center">
+          <div className="inline-flex rounded-md shadow">
+            <Link to="/signup" className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+              Get started
+            </Link>
+          </div>
+          <div className="ml-3 inline-flex">
+            <Link to="/about" className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200">
+              Learn more
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <header className="bg-blue-600 text-white">
@@ -13,14 +86,7 @@ const HomePage: React.FC = () => {
           <p className="mt-6 max-w-2xl mx-auto text-xl">
             Connect with meaningful volunteer opportunities tailored just for you.
           </p>
-          <div className="mt-10 flex justify-center space-x-4">
-            <Link to="/signup" className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-800 hover:bg-blue-700">
-              Sign Up
-            </Link>
-            <Link to="/login" className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50">
-              Log In
-            </Link>
-          </div>
+          {renderAuthButtons()}
         </div>
       </header>
 
@@ -52,24 +118,7 @@ const HomePage: React.FC = () => {
         </div>
 
         <div className="bg-blue-50 dark:bg-blue-900">
-          <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8">
-            <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl">
-              <span className="block">Ready to make a difference?</span>
-              <span className="block text-blue-600">Join VolunMatch today.</span>
-            </h2>
-            <div className="mt-8 flex justify-center">
-              <div className="inline-flex rounded-md shadow">
-                <Link to="/signup" className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                  Get started
-                </Link>
-              </div>
-              <div className="ml-3 inline-flex">
-                <Link to="/about" className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200">
-                  Learn more
-                </Link>
-              </div>
-            </div>
-          </div>
+          {renderCallToAction()}
         </div>
       </main>
     </div>

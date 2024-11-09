@@ -173,29 +173,36 @@ export const fetchProfile = async (): Promise<Profile> => {
   }
 };
 
-export const updateProfile = async (profileData: Partial<Profile>) => {
+export const updateProfile = async (data: Partial<Profile>) => {
   try {
-    const response = await axiosInstance.patch('/api/profile/', profileData);
+    const response = await axiosInstance.patch('/api/profile/', data);
     return response.data;
   } catch (error) {
-    console.error("Error updating profile", error);
+    console.error("Error updating profile:", error);
     throw error;
   }
 };
 
 export const login = async (email: string, password: string) => {
   try {
+    console.log('Sending volunteer login data:', { email, password });
     const response = await axiosInstance.post('/api/login/', { 
-      username: email,
+      email,  // Changed from username to email
       password 
     });
+
+    // Only set tokens if the response indicates it's a volunteer
+    if (response.data.user_type !== 'volunteer') {
+      throw new Error('This account is not registered as a volunteer');
+    }
+
     localStorage.setItem('authToken', response.data.access);
     localStorage.setItem('refreshToken', response.data.refresh);
     localStorage.setItem('userType', 'volunteer');
     return response.data;
-  } catch (error) {
-    console.error("Error logging in", error);
-    throw error;
+  } catch (error: any) {
+    console.error("Error logging in:", error.response?.data || error);
+    throw error.response?.data || error;
   }
 };
 
@@ -205,14 +212,16 @@ export const logout = async () => {
     if (refreshToken) {
       await axiosInstance.post('/api/logout/', { refresh: refreshToken });
     }
-    // Clear tokens regardless of API call success
+    // Clear all auth-related data
     localStorage.removeItem('authToken');
     localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userType');
   } catch (error) {
     console.error("Error logging out", error);
     // Still clear tokens even if API call fails
     localStorage.removeItem('authToken');
     localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userType');
   }
 };
 
@@ -271,7 +280,14 @@ export interface OrganizationRegisterData {
 
 export const registerOrganization = async (data: OrganizationRegisterData) => {
   try {
-    const response = await axiosInstance.post('/api/register/organization/', data);
+    // Create registration data with username set to email
+    const registrationData = {
+      ...data,
+      username: data.email
+    };
+    
+    console.log('Sending registration data:', registrationData);
+    const response = await axiosInstance.post('/api/register/organization/', registrationData);
     
     localStorage.setItem('authToken', response.data.token);
     localStorage.setItem('refreshToken', response.data.refresh);
@@ -284,19 +300,20 @@ export const registerOrganization = async (data: OrganizationRegisterData) => {
   }
 };
 
-export const loginOrganization = async (username: string, password: string) => {
+export const loginOrganization = async (email: string, password: string) => {
   try {
+    console.log('Sending login data:', { email, password });
     const response = await axiosInstance.post('/api/login/organization/', { 
-      username,
+      email,
       password 
     });
     localStorage.setItem('authToken', response.data.access);
     localStorage.setItem('refreshToken', response.data.refresh);
     localStorage.setItem('userType', 'organization');
     return response.data;
-  } catch (error) {
-    console.error("Error logging in", error);
-    throw error;
+  } catch (error: any) {
+    console.error("Error logging in:", error.response?.data || error);
+    throw error.response?.data || error;
   }
 };
 

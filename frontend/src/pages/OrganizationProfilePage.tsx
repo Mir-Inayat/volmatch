@@ -77,7 +77,6 @@ const OrganizationProfilePage: React.FC = () => {
 
         {isEditing ? (
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Add form fields for editing */}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -91,8 +90,60 @@ const OrganizationProfilePage: React.FC = () => {
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700"
                 />
               </div>
-              {/* Add more form fields */}
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Location
+                </label>
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location || ''}
+                  onChange={handleChange}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Website
+                </label>
+                <input
+                  type="url"
+                  name="website"
+                  value={formData.website || ''}
+                  onChange={handleChange}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Phone
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone || ''}
+                  onChange={handleChange}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700"
+                />
+              </div>
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Description
+              </label>
+              <textarea
+                name="description"
+                rows={4}
+                value={formData.description || ''}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700"
+              />
+            </div>
+
             <div className="flex justify-end">
               <button
                 type="submit"
@@ -112,19 +163,64 @@ const OrganizationProfilePage: React.FC = () => {
                     <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Name</dt>
                     <dd className="mt-1 text-sm text-gray-900 dark:text-white">{profile.name}</dd>
                   </div>
-                  {/* Add more profile details */}
+                  
+                  <div>
+                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Contact Person</dt>
+                    <dd className="mt-1 text-sm text-gray-900 dark:text-white">
+                      {profile.user.first_name} {profile.user.last_name}
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Email</dt>
+                    <dd className="mt-1 text-sm text-gray-900 dark:text-white">{profile.user.email}</dd>
+                  </div>
+
+                  <div>
+                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Location</dt>
+                    <dd className="mt-1 text-sm text-gray-900 dark:text-white">{profile.location}</dd>
+                  </div>
+
+                  <div>
+                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Website</dt>
+                    <dd className="mt-1 text-sm text-gray-900 dark:text-white">
+                      {profile.website ? (
+                        <a href={profile.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-500">
+                          {profile.website}
+                        </a>
+                      ) : 'Not provided'}
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Phone</dt>
+                    <dd className="mt-1 text-sm text-gray-900 dark:text-white">{profile.phone || 'Not provided'}</dd>
+                  </div>
                 </dl>
               </div>
+
               <div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white">Opportunities</h3>
-                <ul className="mt-4 space-y-4">
-                  {profile.opportunities.map(opportunity => (
-                    <li key={opportunity.id} className="flex justify-between items-center">
-                      <span>{opportunity.title}</span>
-                      <span>{opportunity.volunteers_needed} needed, {opportunity.volunteers_registered} registered</span>
-                    </li>
-                  ))}
-                </ul>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">Description</h3>
+                <p className="mt-4 text-sm text-gray-900 dark:text-white">{profile.description || 'No description provided'}</p>
+
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mt-8">Opportunities</h3>
+                {profile.opportunities && profile.opportunities.length > 0 ? (
+                  <ul className="mt-4 space-y-4">
+                    {profile.opportunities.map(opportunity => (
+                      <li key={opportunity.id} className="text-sm">
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium text-gray-900 dark:text-white">{opportunity.title}</span>
+                          <span className="text-gray-500 dark:text-gray-400">
+                            {opportunity.volunteers_registered}/{opportunity.volunteers_needed} volunteers
+                          </span>
+                        </div>
+                        <div className="text-gray-500 dark:text-gray-400">Date: {new Date(opportunity.date).toLocaleDateString()}</div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">No opportunities posted yet</p>
+                )}
               </div>
             </div>
           </div>

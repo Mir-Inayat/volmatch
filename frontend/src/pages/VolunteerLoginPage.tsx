@@ -20,16 +20,27 @@ const VolunteerLoginPage: React.FC = () => {
 
     try {
       const response = await login(email, password);
-      const accessToken = response.access;
-      const refreshToken = response.refresh;
+      
+      // Verify that the user is a volunteer
+      if (response.user_type !== 'volunteer') {
+        setError('This account is not registered as a volunteer.');
+        return;
+      }
 
-      localStorage.setItem('authToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
+      // If verification passes, store tokens and user type
+      localStorage.setItem('authToken', response.access);
+      localStorage.setItem('refreshToken', response.refresh);
+      localStorage.setItem('userType', 'volunteer');
 
       navigate('/profile');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Login failed:', err);
-      setError('Invalid email or password.');
+      // Show more specific error messages
+      if (err.response?.data?.error) {
+        setError(err.response.data.error);
+      } else {
+        setError('Invalid email or password. Please try again.');
+      }
     }
   };
 

@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { User, Mail, MapPin, Calendar, Clock, Award } from 'lucide-react';
-import { fetchProfile, type Profile } from '../api';
+import { fetchProfile, updateProfile, type Profile } from '../api';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const ProfilePage: React.FC = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState<Partial<Profile>>({});
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
@@ -42,6 +44,25 @@ const ProfilePage: React.FC = () => {
     loadProfile();
   }, [navigate]);
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await updateProfile(formData);
+      const updatedProfile = await fetchProfile();
+      setProfile(updatedProfile);
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -68,92 +89,178 @@ const ProfilePage: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Volunteer Profile</h1>
-      
-      <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
-        <div className="px-4 py-5 sm:px-6">
-          <div className="flex items-center">
-            <div className="flex-shrink-0 h-20 w-20">
-              <img 
-                className="h-20 w-20 rounded-full" 
-                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&size=80&background=random`} 
-                alt={fullName} 
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Volunteer Profile</h1>
+        <button
+          onClick={() => {
+            if (isEditing) {
+              setFormData(profile || {});
+            }
+            setIsEditing(!isEditing);
+          }}
+          className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+        >
+          {isEditing ? 'Cancel' : 'Edit Profile'}
+        </button>
+      </div>
+
+      {isEditing ? (
+        <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg p-6">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                First Name
+              </label>
+              <input
+                type="text"
+                name="first_name"
+                value={formData.user?.first_name || ''}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700"
               />
             </div>
-            <div className="ml-4">
-              <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">{fullName}</h3>
-              <p className="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">Volunteer Extraordinaire</p>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Last Name
+              </label>
+              <input
+                type="text"
+                name="last_name"
+                value={formData.user?.last_name || ''}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Location
+              </label>
+              <input
+                type="text"
+                name="location"
+                value={formData.location || ''}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Skills (comma-separated)
+              </label>
+              <input
+                type="text"
+                name="skills"
+                value={formData.skills?.join(', ') || ''}
+                onChange={(e) => {
+                  const skills = e.target.value.split(',').map(skill => skill.trim());
+                  setFormData({
+                    ...formData,
+                    skills
+                  });
+                }}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700"
+              />
             </div>
           </div>
+
+          <div className="mt-6 flex justify-end">
+            <button
+              type="submit"
+              className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
+      ) : (
+        <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
+          <div className="px-4 py-5 sm:px-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0 h-20 w-20">
+                <img 
+                  className="h-20 w-20 rounded-full" 
+                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&size=80&background=random`} 
+                  alt={fullName} 
+                />
+              </div>
+              <div className="ml-4">
+                <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">{fullName}</h3>
+                <p className="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">Volunteer Extraordinaire</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-5 sm:px-6">
+            <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
+              <div className="sm:col-span-1">
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
+                  <Mail className="mr-2 h-5 w-5" />
+                  Email
+                </dt>
+                <dd className="mt-1 text-sm text-gray-900 dark:text-white">{profile.user.email}</dd>
+              </div>
+
+              <div className="sm:col-span-1">
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
+                  <MapPin className="mr-2 h-5 w-5" />
+                  Location
+                </dt>
+                <dd className="mt-1 text-sm text-gray-900 dark:text-white">{profile.location}</dd>
+              </div>
+
+              <div className="sm:col-span-1">
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
+                  <Calendar className="mr-2 h-5 w-5" />
+                  Member since
+                </dt>
+                <dd className="mt-1 text-sm text-gray-900 dark:text-white">
+                  {new Date(profile.join_date).toLocaleDateString()}
+                </dd>
+              </div>
+
+              <div className="sm:col-span-1">
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
+                  <Clock className="mr-2 h-5 w-5" />
+                  Total volunteer hours
+                </dt>
+                <dd className="mt-1 text-sm text-gray-900 dark:text-white">{profile.total_hours} hours</dd>
+              </div>
+
+              <div className="sm:col-span-2">
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Skills</dt>
+                <dd className="mt-1 text-sm text-gray-900 dark:text-white">
+                  <ul className="border border-gray-200 dark:border-gray-700 rounded-md divide-y divide-gray-200 dark:divide-gray-700">
+                    {profile.skills.map((skill) => (
+                      <li key={skill} className="pl-3 pr-4 py-3 flex items-center justify-between text-sm">
+                        {skill}
+                      </li>
+                    ))}
+                  </ul>
+                </dd>
+              </div>
+
+              <div className="sm:col-span-2">
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Badges</dt>
+                <dd className="mt-1 text-sm text-gray-900 dark:text-white">
+                  <ul className="border border-gray-200 dark:border-gray-700 rounded-md divide-y divide-gray-200 dark:divide-gray-700">
+                    {profile.badges.map((badge) => (
+                      <li key={badge} className="pl-3 pr-4 py-3 flex items-center justify-between text-sm">
+                        <div className="flex items-center">
+                          <Award className="mr-2 h-5 w-5 text-yellow-400" />
+                          {badge}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </dd>
+              </div>
+            </dl>
+          </div>
         </div>
-
-        <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-5 sm:px-6">
-          <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
-            <div className="sm:col-span-1">
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
-                <Mail className="mr-2 h-5 w-5" />
-                Email
-              </dt>
-              <dd className="mt-1 text-sm text-gray-900 dark:text-white">{profile.user.email}</dd>
-            </div>
-
-            <div className="sm:col-span-1">
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
-                <MapPin className="mr-2 h-5 w-5" />
-                Location
-              </dt>
-              <dd className="mt-1 text-sm text-gray-900 dark:text-white">{profile.location}</dd>
-            </div>
-
-            <div className="sm:col-span-1">
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
-                <Calendar className="mr-2 h-5 w-5" />
-                Member since
-              </dt>
-              <dd className="mt-1 text-sm text-gray-900 dark:text-white">
-                {new Date(profile.join_date).toLocaleDateString()}
-              </dd>
-            </div>
-
-            <div className="sm:col-span-1">
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
-                <Clock className="mr-2 h-5 w-5" />
-                Total volunteer hours
-              </dt>
-              <dd className="mt-1 text-sm text-gray-900 dark:text-white">{profile.total_hours} hours</dd>
-            </div>
-
-            <div className="sm:col-span-2">
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Skills</dt>
-              <dd className="mt-1 text-sm text-gray-900 dark:text-white">
-                <ul className="border border-gray-200 dark:border-gray-700 rounded-md divide-y divide-gray-200 dark:divide-gray-700">
-                  {profile.skills.map((skill) => (
-                    <li key={skill} className="pl-3 pr-4 py-3 flex items-center justify-between text-sm">
-                      {skill}
-                    </li>
-                  ))}
-                </ul>
-              </dd>
-            </div>
-
-            <div className="sm:col-span-2">
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Badges</dt>
-              <dd className="mt-1 text-sm text-gray-900 dark:text-white">
-                <ul className="border border-gray-200 dark:border-gray-700 rounded-md divide-y divide-gray-200 dark:divide-gray-700">
-                  {profile.badges.map((badge) => (
-                    <li key={badge} className="pl-3 pr-4 py-3 flex items-center justify-between text-sm">
-                      <div className="flex items-center">
-                        <Award className="mr-2 h-5 w-5 text-yellow-400" />
-                        {badge}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </dd>
-            </div>
-          </dl>
-        </div>
-      </div>
+      )}
 
       <div className="mt-8 bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
         <div className="px-4 py-5 sm:px-6">

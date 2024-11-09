@@ -1,9 +1,31 @@
 import React, { useEffect, useState } from 'react'
 import { Trophy, Clock, Star } from 'lucide-react'
+import { motion } from 'framer-motion';
 import { getLeaderboard, Volunteer } from '../api';
 
 const LeaderboardPage: React.FC = () => {
   const [leaderboardData, setLeaderboardData] = useState<Volunteer[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fadeInUp = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        duration: 0.8,
+        ease: "easeOut"
+      }
+    }
+  };
+
+  const staggerContainer = {
+    visible: {
+      transition: {
+        staggerChildren: 0.2
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchLeaderboardData = async () => {
@@ -12,96 +34,155 @@ const LeaderboardPage: React.FC = () => {
         setLeaderboardData(data);
       } catch (error) {
         console.error('Error fetching leaderboard data:', error);
-        // Dummy data for the leaderboard
-        const dummyData = [
-          { id: 1, name: 'John Doe', hours: 120, tasks: 25, rating: 4.9 },
-          { id: 2, name: 'Jane Smith', hours: 115, tasks: 23, rating: 4.8 },
-          { id: 3, name: 'Mike Johnson', hours: 110, tasks: 22, rating: 4.7 },
-          { id: 4, name: 'Emily Brown', hours: 105, tasks: 21, rating: 4.6 },
-          { id: 5, name: 'David Lee', hours: 100, tasks: 20, rating: 4.5 },
-          { id: 6, name: 'Sarah Wilson', hours: 95, tasks: 19, rating: 4.4 },
-          { id: 7, name: 'Tom Harris', hours: 90, tasks: 18, rating: 4.3 },
-          { id: 8, name: 'Lisa Chen', hours: 85, tasks: 17, rating: 4.2 },
-          { id: 9, name: 'Alex Taylor', hours: 80, tasks: 16, rating: 4.1 },
-          { id: 10, name: 'Olivia Martinez', hours: 75, tasks: 15, rating: 4.0 },
-        ];
-        setLeaderboardData(dummyData); // Set dummy data on error
+        // Dummy data setup...
+        setLeaderboardData(dummyData);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchLeaderboardData();
   }, []);
 
-  return (
-    <div
-      className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8"
-    >
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Global Leaderboard</h1>
-      
-      <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
-        <table
-          className="min-w-full divide-y divide-gray-200 dark:divide-gray-700"
-        >
-          <thead className="bg-gray-50 dark:bg-gray-700">
-            <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Rank
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Volunteer
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Hours
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Tasks Completed
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Rating
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            {leaderboardData.map((volunteer, index) => (
-              <tr key={volunteer.id} className={index < 3 ? 'bg-yellow-50 dark:bg-yellow-900' : ''}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">{index + 1}</span>
-                    {index < 3 && <Trophy className="ml-2 h-5 w-5 text-yellow-400" />}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 h-10 w-10">
-                      <img className="h-10 w-10 rounded-full" src={`https://ui-avatars.com/api/?name=${volunteer.name}&background=random`} alt="" />
-                    </div>
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">{volunteer.name}</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                    <Clock className="mr-2 h-5 w-5" />
-                    {volunteer.hours}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                  {volunteer.tasks}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                    <Star className="mr-1 h-5 w-5 text-yellow-400" />
-                    {volunteer.rating.toFixed(1)}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen"
+        style={{
+          background: `
+            radial-gradient(
+              circle at 81.4952% 5.51724%, 
+              rgb(30, 64, 175) 0%, 
+              rgba(30, 58, 138, 0.9) 20%, 
+              rgba(23, 37, 84, 0.8) 40%, 
+              rgba(15, 23, 42, 0.9) 60%, 
+              rgb(15, 23, 42) 80%
+            ),
+            linear-gradient(
+              45deg, 
+              rgb(30, 58, 138) 0%, 
+              rgb(23, 37, 84) 50%, 
+              rgb(15, 23, 42) 100%
+            )
+          `
+        }}>
+        <div className="w-12 h-12 border-4 border-blue-400 rounded-full border-t-transparent animate-spin" />
       </div>
-    </div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      className="min-h-screen"
+      style={{
+        background: `
+          radial-gradient(
+            circle at 81.4952% 5.51724%, 
+            rgb(30, 64, 175) 0%, 
+            rgba(30, 58, 138, 0.9) 20%, 
+            rgba(23, 37, 84, 0.8) 40%, 
+            rgba(15, 23, 42, 0.9) 60%, 
+            rgb(15, 23, 42) 80%
+          ),
+          linear-gradient(
+            45deg, 
+            rgb(30, 58, 138) 0%, 
+            rgb(23, 37, 84) 50%, 
+            rgb(15, 23, 42) 100%
+          )
+        `
+      }}
+    >
+      <motion.div 
+        variants={staggerContainer}
+        className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8"
+      >
+        <motion.h1 
+          variants={fadeInUp}
+          transition={{ delay: 0.2 }}
+          className="text-3xl font-bold text-white mb-6"
+        >
+          Global Leaderboard
+        </motion.h1>
+        
+        <motion.div 
+          variants={fadeInUp}
+          transition={{ delay: 0.4 }}
+          className="bg-gray-800/30 backdrop-blur-md shadow overflow-hidden sm:rounded-lg border border-gray-700"
+        >
+          <table className="min-w-full divide-y divide-gray-700">
+            <thead className="bg-gray-800/50">
+              <tr>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  Rank
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  Volunteer
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  Hours
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  Tasks Completed
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  Rating
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-700">
+              {leaderboardData.map((volunteer, index) => (
+                <motion.tr 
+                  key={volunteer.id}
+                  variants={fadeInUp}
+                  transition={{ delay: 0.6 + (index * 0.1) }}
+                  whileHover={{ backgroundColor: "rgba(59, 130, 246, 0.1)" }}
+                  className={index < 3 ? 'bg-yellow-900/30' : 'bg-gray-800/30'}
+                >
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <span className="text-sm font-medium text-white">{index + 1}</span>
+                      {index < 3 && <Trophy className="ml-2 h-5 w-5 text-yellow-400" />}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 h-10 w-10">
+                        <img 
+                          className="h-10 w-10 rounded-full ring-2 ring-blue-500/50" 
+                          src={`https://ui-avatars.com/api/?name=${volunteer.name}&background=random`} 
+                          alt="" 
+                        />
+                      </div>
+                      <div className="ml-4">
+                        <div className="text-sm font-medium text-white">{volunteer.name}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center text-sm text-gray-300">
+                      <Clock className="mr-2 h-5 w-5 text-blue-400" />
+                      {volunteer.hours}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                    {volunteer.tasks}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center text-sm text-gray-300">
+                      <Star className="mr-1 h-5 w-5 text-yellow-400" />
+                      {volunteer.rating.toFixed(1)}
+                    </div>
+                  </td>
+                </motion.tr>
+              ))}
+            </tbody>
+          </table>
+        </motion.div>
+      </motion.div>
+    </motion.div>
   )
 }
 
-export default LeaderboardPage
+export default LeaderboardPage;

@@ -633,3 +633,47 @@ class RecommendVolunteersForOrganization(APIView):
                 'error': str(e),
                 'volunteers': []
             }, status=status.HTTP_400_BAD_REQUEST)
+
+class OpportunityApplicationView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, opportunity_id):
+        try:
+            volunteer = get_object_or_404(Volunteer, user=request.user)
+            opportunity = get_object_or_404(VolunteerOpportunity, id=opportunity_id)
+            
+            # Check if already applied
+            if Application.objects.filter(volunteer=volunteer, opportunity=opportunity).exists():
+                return Response(
+                    {'error': 'You have already applied for this opportunity'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Check if spots are available
+            if opportunity.volunteers_registered >= opportunity.volunteers_needed:
+                return Response(
+                    {'error': 'This opportunity is already full'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Create application
+            application = Application.objects.create(
+                volunteer=volunteer,
+                opportunity=opportunity,
+                status='pending'
+            )
+            
+            # Increment registered volunteers count
+            opportunity.volunteers_registered += 1
+            opportunity.save()
+            
+            return Response({
+                'message': 'Application submitted successfully',
+                'application_id': application.id
+            }, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { loginOrganization } from '../api';
 import { useAuth } from '../contexts/AuthContext';
+import { useSpotlight } from '../hooks/useSpotlight';
 
 const OrganizationLoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ const OrganizationLoginPage: React.FC = () => {
   });
   const [error, setError] = useState('');
   const { setAuth } = useAuth();
+  const { mousePosition, getGradientStyle, initialGradientStyle } = useSpotlight();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,8 +35,17 @@ const OrganizationLoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-gray-100 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div 
+      className="min-h-[calc(100vh-4rem)] relative overflow-hidden flex items-center justify-center"
+      style={mousePosition.x === 50 ? initialGradientStyle : getGradientStyle(mousePosition.x, mousePosition.y)}
+    >
+      <div 
+        className="absolute inset-0 bg-white/10 pointer-events-none"
+        style={{
+          background: `radial-gradient(600px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(255,255,255,0.06), transparent 40%)`
+        }}
+      />
+      <div className="max-w-md w-full space-y-8 mx-auto px-4 sm:px-6 lg:px-8">
         <div>
           <Link to="/login" className="inline-flex items-center text-sm text-blue-600 hover:text-blue-500">
             <ArrowLeft className="h-4 w-4 mr-1" />

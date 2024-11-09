@@ -83,6 +83,15 @@ export const getOpportunities = async () => {
   }
 };
 
+export const applyForOpportunity = async (opportunityId: number) => {
+  try {
+    const response = await axiosInstance.post(`/api/opportunities/${opportunityId}/apply/`);
+    return response.data;
+  } catch (error) {
+    console.error("Error applying for opportunity:", error);
+    throw error;
+  }
+};
 
 export interface LoginData {
   username: string;
@@ -397,4 +406,21 @@ export interface OrganizationProfile {
   phone?: string;
   category: string;
   email: string;
+}
+
+// Add these interfaces
+export interface Opportunity {
+  id: number;
+  title: string;
+  description: string;
+  organization: {
+    id: number;
+    name: string;
+  };
+  date: string;
+  location: string;
+  volunteers_needed: number;
+  volunteers_registered: number;
+  skills_required: string[];
+  created_at: string;
 }

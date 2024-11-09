@@ -1,3 +1,162 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Add this to your CSS file */
+.spotlight-header {
+  position: relative;
+  isolation: isolate;
+}
+
+
+.water-effect-header {
+  position: relative;
+  isolation: isolate;
+  background: radial-gradient(
+      circle at 81.4952% 5.51724%, 
+      rgb(3, 13, 46) 0%, 
+      rgba(2, 16, 54, 0.9) 20%, 
+      rgba(23, 37, 84, 0.8) 40%, 
+      rgba(15, 23, 42, 0.9) 60%, 
+      rgb(15, 23, 42) 80%
+    ),
+    linear-gradient(
+      45deg, 
+      rgb(2, 13, 43) 0%, 
+      rgb(23, 37, 84) 50%, 
+      rgb(15, 23, 42) 100%
+    );
+  transition: background 0.1s ease-out;
+}
+
+.water-ripple {
+  position: absolute;
+  clip-path: polygon(
+    50% 0%,
+    61% 35%,
+    98% 35%,
+    68% 57%,
+    79% 91%,
+    50% 70%,
+    21% 91%,
+    32% 57%,
+    2% 35%,
+    39% 35%
+  );
+  width: 10px;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+  0% {
+    width: 0px;
+    height: 0px;
+    opacity: 0.3;
+    transform: rotate(0deg);
+  }
+  100% {
+    width: 80px;
+    height: 80px;
+    opacity: 0;
+    transform: rotate(180deg);
+  }
+}
+
+/* Optional: Add a subtle gradient background to the header */
+.water-effect-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    45deg,
+    rgba(37, 99, 235, 0.5),   /* blue-600 with opacity */
+    rgba(29, 78, 216, 0.7)    /* blue-700 with opacity */
+  );
+  z-index: -1;
+}
+
+.cta-section {
+  position: relative;
+  isolation: isolate;
+  background: radial-gradient(
+      circle at 81.4952% 5.51724%, 
+      rgb(30, 64, 175) 0%, 
+      rgba(30, 58, 138, 0.9) 20%, 
+      rgba(23, 37, 84, 0.8) 40%, 
+      rgba(15, 23, 42, 0.9) 60%, 
+      rgb(15, 23, 42) 80%
+    ),
+    linear-gradient(
+      45deg, 
+      rgb(30, 58, 138) 0%, 
+      rgb(23, 37, 84) 50%, 
+      rgb(15, 23, 42) 100%
+    );
+  transition: background 0.1s ease-out;
+}
+
+/* Update text colors for better contrast */
+.cta-section h2 {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.cta-section .block {
+  transition: color 0.3s ease;
+}
+
+/* Optional: Add hover effect on the button */
+.cta-section .rounded-md {
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
+}
+
+.cta-section .rounded-md:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Common styles for both header and CTA buttons */
+.water-effect-header a, .cta-section a {
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
+}
+
+.water-effect-header a:hover, .cta-section a:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Common header and CTA section styles */
+.water-effect-header, .cta-section {
+  position: relative;
+  isolation: isolate;
+  transition: background 0.1s ease-out;
+}
+
+/* Common text styles */
+.water-effect-header h1, .cta-section h2 {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Ripple effect adjustments */
+.water-ripple {
+  background: rgba(255, 255, 255, 0.2);
+  animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+  0% {
+    width: 0px;
+    height: 0px;
+    opacity: 0.3;
+    transform: rotate(0deg);
+  }
+  100% {
+    width: 80px;
+    height: 80px;
+    opacity: 0;
+    transform: rotate(180deg);
+  }
+}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Upload } from 'lucide-react';
 import { register, RegisterData } from '../api';
+import { useSpotlight } from '../hooks/useSpotlight';
 
 const VolunteerSignupPage: React.FC = () => {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ const VolunteerSignupPage: React.FC = () => {
   });
   const [error, setError] = useState<string | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const { mousePosition, getGradientStyle, initialGradientStyle } = useSpotlight();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { id, value } = e.target;
@@ -92,7 +94,16 @@ const VolunteerSignupPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-gray-100 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+    <div 
+      className="min-h-[calc(100vh-4rem)] relative overflow-hidden"
+      style={mousePosition.x === 50 ? initialGradientStyle : getGradientStyle(mousePosition.x, mousePosition.y)}
+    >
+      <div 
+        className="absolute inset-0 bg-white/10 pointer-events-none"
+        style={{
+          background: `radial-gradient(600px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(255,255,255,0.06), transparent 40%)`
+        }}
+      />
       <div className="max-w-2xl mx-auto">
         <div>
           <Link to="/signup" className="inline-flex items-center text-sm text-blue-600 hover:text-blue-500">
@@ -110,7 +121,7 @@ const VolunteerSignupPage: React.FC = () => {
         <div className="mt-8">
           <button
             onClick={handleGoogleSignup}
-            className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
+            className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 ease-in-out hover:shadow-lg"
           >
             <img src="https://www.google.com/favicon.ico" alt="Google" className="h-5 w-5 mr-2" />
             Sign up with Google
@@ -133,7 +144,7 @@ const VolunteerSignupPage: React.FC = () => {
 
           <div className="space-y-6">
             {/* Basic Information */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow hover:shadow-xl transition-all duration-200 ease-in-out hover:scale-[1.01]">
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Basic Information</h3>
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
@@ -358,7 +369,7 @@ const VolunteerSignupPage: React.FC = () => {
           <div>
             <button
               type="submit"
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-all duration-200 ease-in-out hover:shadow-lg"
             >
               Create Account
             </button>

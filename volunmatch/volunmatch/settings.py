@@ -127,7 +127,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # If you have any custom locations for static files, you can define them here:
 STATICFILES_DIRS = [
-    BASE_DIR / "static",  # Example, if your app has a `static` folder
+    BASE_DIR / 'volunmatch/static',  # React static files folder
 ]
 
 # Default primary key field type

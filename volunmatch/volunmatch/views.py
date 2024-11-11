@@ -1,4 +1,7 @@
-from django.shortcuts import render
+from django.http import HttpResponse
+import os
 
 def index(request):
-    return render(request, 'index.html')
+    # Serve the index.html directly from static
+    with open(os.path.join('volunmatch/static', 'index.html')) as f:
+        return HttpResponse(f.read())

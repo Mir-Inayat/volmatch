@@ -174,9 +174,29 @@ class VolunteerListCreate(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
 class OpportunityListCreate(generics.ListCreateAPIView):
-    queryset = VolunteerOpportunity.objects.all()
     serializer_class = OpportunitySerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = VolunteerOpportunity.objects.all()
+        if self.request.user.is_authenticated:
+            try:
+                volunteer = Volunteer.objects.get(user=self.request.user)
+                for opportunity in queryset:
+                    # Check if the volunteer has a pending application
+                    opportunity.applied = Application.objects.filter(
+                        volunteer=volunteer,
+                        opportunity=opportunity,
+                        status='pending'
+                    ).exists()
+            except Volunteer.DoesNotExist:
+                pass
+        return queryset
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
 
     def perform_create(self, serializer):
         # Link the opportunity to the organization
@@ -640,3 +660,101 @@ class RecommendVolunteersForOrganization(APIView):
                 'error': str(e),
                 'volunteers': []
             }, status=status.HTTP_400_BAD_REQUEST)
+
+class OpportunityApplyView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, opportunity_id):
+        try:
+            # Get the opportunity and volunteer
+            opportunity = get_object_or_404(VolunteerOpportunity, id=opportunity_id)
+            volunteer = get_object_or_404(Volunteer, user=request.user)
+
+            # Check if already applied
+            existing_application = Application.objects.filter(
+                volunteer=volunteer,
+                opportunity=opportunity,
+                status='pending'
+            ).first()
+
+            if existing_application:
+                return Response(
+                    {'error': 'You have already applied for this opportunity'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Check if spots are still available
+            if opportunity.volunteers_registered >= opportunity.volunteers_needed:
+                return Response(
+                    {'error': 'This opportunity is already full'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Create application
+            Application.objects.create(
+                volunteer=volunteer,
+                opportunity=opportunity,
+                status='pending'
+            )
+
+            # Increment volunteers_registered
+            opportunity.volunteers_registered += 1
+            opportunity.save()
+
+            return Response({
+                'message': 'Successfully applied for opportunity',
+                'applied': True
+            })
+
+        except Volunteer.DoesNotExist:
+            return Response(
+                {'error': 'Volunteer profile not found'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except VolunteerOpportunity.DoesNotExist:
+            return Response(
+                {'error': 'Opportunity not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+# Add a new view for withdrawal
+class OpportunityWithdrawView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, opportunity_id):
+        try:
+            opportunity = get_object_or_404(VolunteerOpportunity, id=opportunity_id)
+            volunteer = get_object_or_404(Volunteer, user=request.user)
+
+            # Check if application exists
+            application = Application.objects.filter(
+                volunteer=volunteer,
+                opportunity=opportunity,
+                status='pending'
+            ).first()
+
+            if not application:
+                return Response(
+                    {'error': 'No active application found'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Delete the application
+            application.delete()
+
+            # Decrement volunteers_registered
+            opportunity.volunteers_registered = max(0, opportunity.volunteers_registered - 1)
+            opportunity.save()
+
+            return Response({'message': 'Successfully withdrawn from opportunity'})
+
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )

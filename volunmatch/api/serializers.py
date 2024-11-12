@@ -16,6 +16,9 @@ class VolunteerSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class OpportunitySerializer(serializers.ModelSerializer):
+    applied = serializers.BooleanField(read_only=True, default=False)
+    applications_count = serializers.SerializerMethodField()
+    
     class Meta:
         model = VolunteerOpportunity
         fields = [
@@ -27,9 +30,24 @@ class OpportunitySerializer(serializers.ModelSerializer):
             'volunteers_needed',
             'volunteers_registered',
             'skills_required',
-            'created_at'
+            'created_at',
+            'organization',
+            'applied',
+            'applications_count'
         ]
-        read_only_fields = ['volunteers_registered', 'created_at']
+        read_only_fields = ['volunteers_registered', 'created_at', 'applied', 'applications_count']
+
+    def get_applications_count(self, obj):
+        return Application.objects.filter(opportunity=obj, status='pending').count()
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        # Include organization details
+        representation['organization'] = {
+            'id': instance.organization.id,
+            'name': instance.organization.name
+        }
+        return representation
 
 class ApplicationSerializer(serializers.ModelSerializer):
     class Meta:

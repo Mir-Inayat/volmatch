@@ -73,7 +73,7 @@ export interface RegisterData {
   profile_image?: string;
 }
 
-export const getOpportunities = async () => {
+export const getOpportunities = async (): Promise<Opportunity[]> => {
   try {
     const response = await axiosInstance.get('/api/opportunities/');
     return response.data;
@@ -82,7 +82,6 @@ export const getOpportunities = async () => {
     throw error;
   }
 };
-
 
 export interface LoginData {
   username: string;
@@ -386,6 +385,16 @@ export const createOpportunity = async (data: OpportunityFormData) => {
   }
 };
 
+export const applyForOpportunity = async (opportunityId: number): Promise<void> => {
+  try {
+    const response = await axiosInstance.post(`/api/opportunities/${opportunityId}/apply/`);
+    return response.data;
+  } catch (error) {
+    console.error("Error applying for opportunity:", error);
+    throw error;
+  }
+};
+
 // Add this line to export the instance
 export const api = axiosInstance;
 
@@ -398,3 +407,33 @@ export interface OrganizationProfile {
   category: string;
   email: string;
 }
+
+// Update the Opportunity interface
+export interface Opportunity {
+  id: number;
+  title: string;
+  description: string;
+  date: string;
+  location: string;
+  volunteers_needed: number;
+  volunteers_registered: number;
+  skills_required: string[];
+  created_at: string;
+  organization: {
+    id: number;
+    name: string;
+  };
+  applied?: boolean;
+  applications_count?: number;  // Add this field
+}
+
+// Add a new function to withdraw application
+export const withdrawFromOpportunity = async (opportunityId: number): Promise<void> => {
+  try {
+    const response = await axiosInstance.post(`/api/opportunities/${opportunityId}/withdraw/`);
+    return response.data;
+  } catch (error) {
+    console.error("Error withdrawing from opportunity:", error);
+    throw error;
+  }
+};

@@ -1,61 +1,194 @@
 import React, { useEffect, useState } from 'react'
-import { Calendar, Clock, Award } from 'lucide-react'
-import { getLeaderboard, type Volunteer } from '../api'
+import { Calendar, Clock, Award, MapPin, Search } from 'lucide-react'
+import { getLeaderboard, getOpportunities, applyForOpportunity, type Volunteer, type Opportunity, withdrawFromOpportunity } from '../api'
 
 const VolunteerDashboard: React.FC = () => {
-  // Dummy data for demonstration
-  const recommendations = [
-    { id: 1, title: 'Community Garden Clean-up', organization: 'Green Earth', date: '2023-06-15', location: 'Central Park' },
-    { id: 2, title: 'Food Bank Assistant', organization: 'City Food Bank', date: '2023-06-18', location: 'Downtown' },
-    { id: 3, title: 'Senior Home Visit', organization: 'Elder Care', date: '2023-06-20', location: 'Sunshine Retirement Home' },
-  ]
+  const [leaderboard, setLeaderboard] = useState<Volunteer[]>([]);
+  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+  const [filteredOpportunities, setFilteredOpportunities] = useState<Opportunity[]>([]);
+  
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [locationFilter, setLocationFilter] = useState('');
+  const [skillFilter, setSkillFilter] = useState('');
 
   const completedTasks = [
     { id: 1, title: 'Beach Clean-up', date: '2023-05-30', hours: 4 },
     { id: 2, title: 'Animal Shelter Helper', date: '2023-06-05', hours: 3 },
   ]
 
-  const [leaderboard, setLeaderboard] = useState<Volunteer[]>([]);
+  const [isApplying, setIsApplying] = useState<number | null>(null);
+
+  // Add state for feedback message
+  const [feedbackMessage, setFeedbackMessage] = useState<string>('');
+
+  const [showWithdrawConfirm, setShowWithdrawConfirm] = useState<number | null>(null);
+
+  const handleApply = async (opportunityId: number) => {
+    try {
+      setIsApplying(opportunityId);
+      await applyForOpportunity(opportunityId);
+      setFeedbackMessage('Successfully applied for opportunity!');
+      
+      const updatedOpportunities = await getOpportunities();
+      setOpportunities(updatedOpportunities);
+      setFilteredOpportunities(updatedOpportunities);
+    } catch (error: any) {
+      setFeedbackMessage(error.response?.data?.error || 'Failed to apply for opportunity');
+    } finally {
+      setIsApplying(null);
+      setTimeout(() => setFeedbackMessage(''), 3000);
+    }
+  };
+
+  const handleWithdraw = async (opportunityId: number) => {
+    if (showWithdrawConfirm === opportunityId) {
+      try {
+        setIsApplying(opportunityId);
+        await withdrawFromOpportunity(opportunityId);
+        setFeedbackMessage('Successfully withdrawn from opportunity');
+        
+        const updatedOpportunities = await getOpportunities();
+        setOpportunities(updatedOpportunities);
+        setFilteredOpportunities(updatedOpportunities);
+      } catch (error: any) {
+        setFeedbackMessage(error.response?.data?.error || 'Failed to withdraw from opportunity');
+      } finally {
+        setIsApplying(null);
+        setShowWithdrawConfirm(null);
+        setTimeout(() => setFeedbackMessage(''), 3000);
+      }
+    } else {
+      setShowWithdrawConfirm(opportunityId);
+      setTimeout(() => setShowWithdrawConfirm(null), 3000); // Reset after 3 seconds
+    }
+  };
 
   useEffect(() => {
-    const fetchLeaderboard = async () => {
+    const fetchData = async () => {
       try {
-        const data = await getLeaderboard();
-        setLeaderboard(data);
+        const [leaderboardData, opportunitiesData] = await Promise.all([
+          getLeaderboard(),
+          getOpportunities()
+        ]);
+        setLeaderboard(leaderboardData);
+        setOpportunities(opportunitiesData);
+        setFilteredOpportunities(opportunitiesData);
       } catch (error) {
-        console.error('Error fetching leaderboard:', error);
+        console.error('Error fetching data:', error);
       }
     };
 
-    fetchLeaderboard();
+    fetchData();
   }, []);
+
+  // Filter opportunities based on search term and filters
+  useEffect(() => {
+    let filtered = opportunities;
+
+    if (searchTerm) {
+      filtered = filtered.filter(opp => 
+        opp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        opp.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (locationFilter) {
+      filtered = filtered.filter(opp => 
+        opp.location.toLowerCase().includes(locationFilter.toLowerCase())
+      );
+    }
+
+    if (skillFilter) {
+      filtered = filtered.filter(opp => 
+        opp.skills_required.some(skill => 
+          skill.toLowerCase().includes(skillFilter.toLowerCase())
+        )
+      );
+    }
+
+    setFilteredOpportunities(filtered);
+  }, [searchTerm, locationFilter, skillFilter, opportunities]);
 
   return (
     <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Volunteer Dashboard</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg md:col-span-2">
           <div className="px-4 py-5 sm:p-6">
-            <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">AI Recommendations</h2>
-            <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-              {recommendations.map((rec) => (
-                <li key={rec.id} className="py-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="flex-shrink-0">
-                      <Calendar className="h-6 w-6 text-blue-500" />
+            <div className="flex flex-col space-y-4">
+              <h2 className="text-lg font-medium text-gray-900 dark:text-white">Recommended Opportunities</h2>
+              
+              {/* Filters */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search opportunities..."
+                    className="w-full px-4 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  <Search className="absolute right-3 top-2.5 h-5 w-5 text-gray-400" />
+                </div>
+                
+                <input
+                  type="text"
+                  placeholder="Filter by location..."
+                  className="px-4 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
+                  value={locationFilter}
+                  onChange={(e) => setLocationFilter(e.target.value)}
+                />
+                
+                <input
+                  type="text"
+                  placeholder="Filter by skills..."
+                  className="px-4 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
+                  value={skillFilter}
+                  onChange={(e) => setSkillFilter(e.target.value)}
+                />
+              </div>
+
+              {/* Opportunities List */}
+              <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                {filteredOpportunities.map((opp) => (
+                  <li key={opp.id} className="py-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{opp.title}</p>
+                        <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                          <MapPin className="h-4 w-4 mr-1" />
+                          {opp.location}
+                        </div>
+                        <div className="mt-1 flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                          <span>
+                            {opp.applications_count} applied • {opp.volunteers_registered}/{opp.volunteers_needed} spots filled
+                          </span>
+                        </div>
+                      </div>
+                      <div className="ml-4">
+                        <button 
+                          className={`inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white ${
+                            isApplying === opp.id 
+                              ? 'bg-gray-400 cursor-not-allowed'
+                              : opp.applied
+                              ? 'bg-green-600 hover:bg-red-600'
+                              : 'bg-blue-600 hover:bg-blue-700'
+                          }`}
+                          onClick={() => opp.applied ? handleWithdraw(opp.id) : handleApply(opp.id)}
+                          disabled={isApplying === opp.id}
+                        >
+                          {isApplying === opp.id ? 'Processing...' : 
+                           showWithdrawConfirm === opp.id ? 'Confirm Withdrawal?' :
+                           opp.applied ? 'Applied' : 'Apply'}
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{rec.title}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{rec.organization}</p>
-                    </div>
-                    <div className="inline-flex items-center text-sm font-semibold text-blue-600 dark:text-blue-400">
-                      View Details
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
 
@@ -116,6 +249,14 @@ const VolunteerDashboard: React.FC = () => {
           </div>
         </div>
       </div>
+      {/* Add feedback message display */}
+      {feedbackMessage && (
+        <div className="text-center my-2">
+          <p className={feedbackMessage.includes('Success') ? 'text-green-600' : 'text-red-600'}>
+            {feedbackMessage}
+          </p>
+        </div>
+      )}
     </div>
   )
 }

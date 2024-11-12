@@ -4,7 +4,7 @@ import { Heart, Users, Award } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
 const HomePage: React.FC = () => {
-  const { isAuthenticated, userType } = useAuth();
+  const { isAuthenticated, userType, user } = useAuth();
 
   const renderAuthButtons = () => {
     if (isAuthenticated) {
@@ -33,11 +33,16 @@ const HomePage: React.FC = () => {
   };
 
   const renderCallToAction = () => {
-    if (isAuthenticated) {
+    if (isAuthenticated && user) {
+      const firstName = user.first_name || 'there';
+      const welcomeText = userType === 'volunteer' 
+        ? `Welcome back, ${firstName}!` 
+        : `Welcome back, ${user.organization?.name || firstName}!`;
+
       return (
         <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8">
           <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl">
-            <span className="block">Welcome back!</span>
+            <span className="block">{welcomeText}</span>
             <span className="block text-blue-600">Continue making a difference.</span>
           </h2>
           <div className="mt-8 flex justify-center">

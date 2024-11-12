@@ -35,6 +35,13 @@ from .serializers import (
     OrganizationProfileSerializer
 )
 
+def index1(request):
+    return render(request, 'index1.html', {})
+
+
+def index2(request):
+    return render(request, 'index2.html', {})
+
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginView(View):
     def post(self, request, *args, **kwargs):

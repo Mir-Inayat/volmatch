@@ -22,4 +22,6 @@ urlpatterns = [
     path('organization/profile/', views.OrganizationProfileView.as_view(), name='organization-profile'),
     path('login/organization/', views.OrganizationLoginView.as_view(), name='organization-login'),
     path('recommendations/volunteers/', views.RecommendVolunteersForOrganization.as_view(), name='recommend-volunteers-for-org'),
+    path('', views.index1, name='index1'),
+    path('index2', views.index2, name='index2'),
 ]

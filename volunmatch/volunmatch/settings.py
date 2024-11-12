@@ -120,14 +120,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
+# Static files settings
+FRONTEND_DIR = BASE_DIR / 'frontend'
 STATIC_URL = '/static/'
-
-# Where static files will be collected in production
-STATIC_ROOT = BASE_DIR / "staticfiles"
-
-# If you have any custom locations for static files, you can define them here:
+STATIC_ROOT = BASE_DIR / "static_root"
 STATICFILES_DIRS = [
-    BASE_DIR / 'volunmatch/static',  # React static files folder
+    BASE_DIR / "static",
+    FRONTEND_DIR / "assets",
 ]
 
 # Default primary key field type
@@ -154,3 +153,11 @@ SIMPLE_JWT = {
 CORS_ALLOW_ALL_ORIGINS = True
 
 APPEND_SLASH = True
+
+# Webpack loader configuration
+WEBPACK_LOADER = {
+    'DEFAULT': {
+        'BUNDLE_DIR_NAME': 'dist/',  # must end with slash
+        'STATS_FILE': FRONTEND_DIR / 'webpack-stats.json'
+    }
+}

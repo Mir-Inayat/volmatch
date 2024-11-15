@@ -649,29 +649,30 @@ class OpportunityApplicationView(APIView):
             ).first()
             
             if existing_application:
-                # Handle withdrawal
                 existing_application.delete()
-                opportunity.volunteers_registered -= 1
+                opportunity.volunteers_registered = Application.objects.filter(opportunity=opportunity).count()  # Update count
                 opportunity.save()
                 return Response({
                     'message': 'Application withdrawn successfully',
                     'status': 'withdrawn'
                 })
             
-            # Handle new application
+            # Check capacity before creating new application
             if opportunity.volunteers_registered >= opportunity.volunteers_needed:
                 return Response(
                     {'error': 'This opportunity is already full'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
+            # Create new application
             application = Application.objects.create(
                 volunteer=volunteer,
                 opportunity=opportunity,
                 status='pending'
             )
             
-            opportunity.volunteers_registered += 1
+            # Update count based on actual applications
+            opportunity.volunteers_registered = Application.objects.filter(opportunity=opportunity).count()
             opportunity.save()
             
             return Response({

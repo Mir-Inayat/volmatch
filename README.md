@@ -1,28 +1,46 @@
-# VolMatch — Volunteer-Opportunity Matching Platform
+# VolMatch (VolUnMatch) — Volunteer-Opportunity Matching Platform
 
-> A full-stack platform that connects volunteers with opportunities, built with Python and deployed for community use.
+> A full-stack volunteer-opportunity matching platform built with **Django REST Framework** and **scikit-learn**, with a React frontend and JWT authentication.
 
 ![Python](https://img.shields.io/badge/Python-0d1117?style=flat-square&logo=python&logoColor=58a6ff)
-![Flask](https://img.shields.io/badge/Flask-0d1117?style=flat-square&logo=flask&logoColor=white)
+![Django](https://img.shields.io/badge/Django-0d1117?style=flat-square&logo=django&logoColor=092e20)
+![DRF](https://img.shields.io/badge/DRF-0d1117?style=flat-square&logo=django&logoColor=red)
+![React](https://img.shields.io/badge/React-0d1117?style=flat-square&logo=react&logoColor=61dafb)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-0d1117?style=flat-square&logo=scikitlearn&logoColor=f89939)
 
 ---
 
 ## What it does
 
-VolMatch is a volunteer-opportunity matching web platform that allows organizations to post opportunities and volunteers to discover and apply for them based on skills, availability, and location.
+VolMatch connects volunteers with opportunities by matching them on skills, availability, and preferences using a **machine learning recommendation engine** (scikit-learn). Organizations post opportunities; volunteers get ranked suggestions tailored to their profile.
 
-**Community traction:**
-- **2 forks** from the open source community
-- Built and deployed as a real-use platform, not just a demo
+**Community traction:** 2 forks, real deployed platform.
+
+---
+
+## Architecture
+
+```
+React Frontend (frontend/)
+        ↓  REST API (JWT Auth)
+Django REST Framework (volunmatch/api/)
+        ↓
+  scikit-learn Matching Engine
+  (pandas + numpy + scipy for scoring)
+        ↓
+    SQLite Database
+```
 
 ---
 
 ## Features
 
-- **Volunteer profiles** — skills, availability, and location
-- **Opportunity listings** — organizations post with requirements
-- **Matching logic** — filters volunteers to relevant opportunities
-- **Application flow** — end-to-end apply and confirm workflow
+- **JWT Authentication** — secure login/signup via `djangorestframework-simplejwt`
+- **Volunteer profiles** — skills, availability, location preferences
+- **Opportunity listings** — organizations post with requirements and tags
+- **ML-powered matching** — scikit-learn scores and ranks volunteers against opportunities
+- **REST API** — fully decoupled backend, consumed by React frontend
+- **CORS-enabled** — `django-cors-headers` for cross-origin React dev server support
 
 ---
 
@@ -30,20 +48,45 @@ VolMatch is a volunteer-opportunity matching web platform that allows organizati
 
 | Layer | Technology |
 |---|---|
-| Backend | Python / Flask |
-| Database | PostgreSQL / SQLite |
-| Frontend | HTML / CSS / JavaScript |
-| Deployment | Railway / Render |
+| Backend | Django 5.1 + Django REST Framework |
+| Auth | JWT via `djangorestframework-simplejwt` + PyJWT |
+| Matching Engine | scikit-learn, pandas, numpy, scipy |
+| Database | SQLite (dev) |
+| Frontend | React (in `frontend/`) |
+| Image handling | Pillow |
+
+---
+
+## Project Structure
+
+```
+.
+├── frontend/             # React frontend
+├── volunmatch/           # Django project root
+│   ├── api/              # REST API endpoints, models, serializers
+│   ├── volunmatch/       # Django settings, urls, wsgi, asgi
+│   ├── manage.py
+│   └── requirements.txt
+└── README.md
+```
 
 ---
 
 ## Setup
 
 ```bash
-git clone https://github.com/Mir-Inayat/volmatch
-cd volmatch
+# Backend
+cd volunmatch
+python -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
-python app.py
+python manage.py migrate
+python manage.py runserver
+
+# Frontend
+cd ../frontend
+npm install
+npm start
 ```
 
 ---
